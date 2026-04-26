@@ -8,6 +8,8 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: #1a1a2e; color: #fff; font-family: -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; user-select: none; -webkit-tap-highlight-color: transparent; }
     h1 { font-size: 2.2rem; letter-spacing: 0.18em; margin-bottom: 2.5rem; color: #e94560; font-weight: 800; }
+
+    /* Scanner */
     #scanner-screen { display: flex; flex-direction: column; align-items: center; }
     #scan-btn { width: 130px; height: 130px; border-radius: 50%; background: #e94560; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 50px rgba(233,69,96,0.45); transition: transform 0.1s; touch-action: manipulation; }
     #scan-btn:active { transform: scale(0.91); }
@@ -19,19 +21,36 @@
     #canvas { display: none; }
     #scan-hint { margin-top: 1rem; font-size: 0.9rem; color: #888; }
     #stop-btn { margin-top: 1.2rem; background: none; border: 1px solid #555; color: #aaa; padding: 0.5rem 1.5rem; border-radius: 999px; cursor: pointer; font-size: 0.9rem; }
+
+    /* Player */
     #player-screen { display: none; flex-direction: column; align-items: center; }
     #player-screen.active { display: flex; }
-    #play-btn { width: 130px; height: 130px; border-radius: 50%; background: #e94560; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.1s, background 0.2s; box-shadow: 0 0 50px rgba(233,69,96,0.45); touch-action: manipulation; }
-    #play-btn:active { transform: scale(0.91); }
-    #play-btn.playing { background: #16213e; box-shadow: 0 0 50px rgba(22,33,62,0.6); }
-    #play-btn.loading { opacity: 0.5; pointer-events: none; }
-    #play-btn svg { width: 52px; height: 52px; fill: #fff; }
-    #msg { margin-top: 1.5rem; font-size: 1rem; color: #888; min-height: 1.4rem; text-align: center; padding: 0 2rem; }
+
+    /* Soundwave */
+    .wave { display: flex; align-items: flex-end; justify-content: center; gap: 5px; height: 80px; width: 130px; cursor: pointer; padding: 10px 0; }
+    .wave span { width: 8px; border-radius: 4px; background: #e94560; transition: background 0.3s; }
+    .wave.loading span { background: #555; height: 6px !important; animation: none !important; }
+    .wave.paused span { animation-play-state: paused !important; }
+    .wave span:nth-child(1) { animation: bar 0.9s ease-in-out infinite; animation-delay: 0.0s; }
+    .wave span:nth-child(2) { animation: bar 0.9s ease-in-out infinite; animation-delay: 0.15s; }
+    .wave span:nth-child(3) { animation: bar 0.9s ease-in-out infinite; animation-delay: 0.3s; }
+    .wave span:nth-child(4) { animation: bar 0.9s ease-in-out infinite; animation-delay: 0.45s; }
+    .wave span:nth-child(5) { animation: bar 0.9s ease-in-out infinite; animation-delay: 0.3s; }
+    .wave span:nth-child(6) { animation: bar 0.9s ease-in-out infinite; animation-delay: 0.15s; }
+    .wave span:nth-child(7) { animation: bar 0.9s ease-in-out infinite; animation-delay: 0.0s; }
+    @keyframes bar {
+      0%, 100% { height: 8px; }
+      50%       { height: 56px; }
+    }
+
+    #msg { margin-top: 1.2rem; font-size: 1rem; color: #888; min-height: 1.4rem; text-align: center; padding: 0 2rem; }
+    #tap-hint { margin-top: 0.5rem; font-size: 0.8rem; color: #555; min-height: 1rem; }
     #new-scan-btn { margin-top: 2rem; background: none; border: 1px solid #555; color: #aaa; padding: 0.5rem 1.5rem; border-radius: 999px; cursor: pointer; font-size: 0.9rem; }
   </style>
 </head>
 <body>
   <h1>FROBSTER</h1>
+
   <div id="scanner-screen">
     <button id="scan-btn" aria-label="Scan kaartje">
       <svg viewBox="0 0 24 24"><path d="M9.5 6.5v3h-3v-3h3M11 5H5v6h6V5zm-1.5 9.5v3h-3v-3h3M11 13H5v6h6v-6zm6.5-6.5v3h-3v-3h3M19 5h-6v6h6V5zm-6 8h1.5v1.5H13V13zm1.5 1.5H16V16h-1.5v-1.5zM16 13h1.5v1.5H16V13zm-3 3h1.5v1.5H13V16zm1.5 1.5H16V19h-1.5v-1.5zM16 16h1.5v1.5H16V16zm1.5-1.5H19V16h-1.5v-1.5zm0 3H19V19h-1.5v-1.5zM22 7h-2V4h-3V2h5v5zm0 15v-5h-2v3h-3v2h5zM2 22h5v-2H4v-3H2v5zM2 2v5h2V4h3V2H2z"/></svg>
@@ -44,14 +63,16 @@
       <button id="stop-btn">Annuleren</button>
     </div>
   </div>
+
   <div id="player-screen">
-    <button id="play-btn" class="loading">
-      <svg id="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-      <svg id="icon-pause" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6zm8-14v14h4V5z"/></svg>
-    </button>
-    <div id="msg">Laden...</div>
+    <div class="wave loading" id="wave">
+      <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <div id="msg">Zoeken...</div>
+    <div id="tap-hint"></div>
     <button id="new-scan-btn">Nieuw kaartje scannen</button>
   </div>
+
   <audio id="audio"></audio>
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   <script>
@@ -64,24 +85,25 @@
     const scanLabel     = document.getElementById("scan-label");
     const stopBtn       = document.getElementById("stop-btn");
     const newScanBtn    = document.getElementById("new-scan-btn");
-    const playBtn       = document.getElementById("play-btn");
+    const wave          = document.getElementById("wave");
     const msgEl         = document.getElementById("msg");
-    const iconPlay      = document.getElementById("icon-play");
-    const iconPause     = document.getElementById("icon-pause");
+    const tapHint       = document.getElementById("tap-hint");
     const audio         = document.getElementById("audio");
 
     let stream = null, scanLoop = null, trackData = null;
-    let searchVersion = 0; // voorkomt race conditions bij snel wisselen
+    let searchVersion = 0;
     let lastScannedId = null;
-    let scanCooldown = false;
+    let scanCooldown  = false;
+    let isPlaying     = false;
 
     const params = new URLSearchParams(location.search);
-    const urlId = params.get("id");
+    const urlId  = params.get("id");
 
     fetch("data.json?v=" + Date.now())
       .then(r => r.json())
       .then(d => { trackData = d; if (urlId) startPlayer(urlId); });
 
+    // Scanner
     scanBtn.addEventListener("click", startCamera);
     stopBtn.addEventListener("click", stopCamera);
     newScanBtn.addEventListener("click", () => {
@@ -92,14 +114,23 @@
       scannerScreen.style.display = "flex";
     });
 
+    // Tik op wave = pause/play
+    wave.addEventListener("click", () => {
+      if (wave.classList.contains("loading")) return;
+      if (audio.paused) {
+        audio.play().then(() => setPlaying(true)).catch(() => {});
+      } else {
+        audio.pause();
+        setPlaying(false);
+      }
+    });
+
     function startCamera() {
       navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
         .then(s => {
-          stream = s;
-          video.srcObject = s;
+          stream = s; video.srcObject = s;
           cameraWrap.classList.add("active");
-          scanBtn.style.display = "none";
-          scanLabel.style.display = "none";
+          scanBtn.style.display = "none"; scanLabel.style.display = "none";
           scanCooldown = false;
           scanLoop = requestAnimationFrame(tick);
         })
@@ -110,33 +141,24 @@
       if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
       if (scanLoop) { cancelAnimationFrame(scanLoop); scanLoop = null; }
       cameraWrap.classList.remove("active");
-      scanBtn.style.display = "";
-      scanLabel.style.display = "";
+      scanBtn.style.display = ""; scanLabel.style.display = "";
     }
 
     function tick() {
       if (!scanCooldown && video.readyState === video.HAVE_ENOUGH_DATA) {
         const ctx = canvas.getContext("2d");
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
+        canvas.width = video.videoWidth; canvas.height = video.videoHeight;
         ctx.drawImage(video, 0, 0);
-        const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const img  = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const code = jsQR(img.data, img.width, img.height);
         if (code && code.data) {
           let id = null;
-          try {
-            const url = new URL(code.data);
-            id = url.searchParams.get("id");
-          } catch(e) {
-            const m = code.data.match(/[?&]id=([^&]+)/);
-            if (m) id = m[1];
+          try { id = new URL(code.data).searchParams.get("id"); } catch(e) {
+            const m = code.data.match(/[?&]id=([^&]+)/); if (m) id = m[1];
           }
           if (id && id !== lastScannedId) {
-            scanCooldown = true;
-            lastScannedId = id;
-            stopCamera();
-            startPlayer(id);
-            return;
+            scanCooldown = true; lastScannedId = id;
+            stopCamera(); startPlayer(id); return;
           }
         }
       }
@@ -151,14 +173,12 @@
         s.src    = "https://api.deezer.com/search?q=" + q + "&limit=1&output=jsonp&callback=" + cb;
         let done = false;
         window[cb] = (data) => {
-          if (done) return; done = true;
-          delete window[cb]; s.remove();
-          const preview = data && data.data && data.data[0] && data.data[0].preview;
-          resolve(preview || null);
+          if (done) return; done = true; delete window[cb]; s.remove();
+          resolve(data && data.data && data.data[0] ? data.data[0].preview : null);
         };
         s.onerror = () => { if (done) return; done = true; delete window[cb]; s.remove(); resolve(null); };
         document.head.appendChild(s);
-        setTimeout(() => { if (!done) { done = true; if (window[cb]) delete window[cb]; s.remove(); resolve(null); } }, 6000);
+        setTimeout(() => { if (!done) { done = true; if(window[cb]) delete window[cb]; s.remove(); resolve(null); } }, 6000);
       });
     }
 
@@ -167,54 +187,51 @@
 
       scannerScreen.style.display = "none";
       playerScreen.classList.add("active");
-      playBtn.classList.add("loading");
-      audio.pause();
-      audio.src = "";
-      setPlaying(false);
-      msgEl.textContent = "Zoeken...";
+      audio.pause(); audio.src = ""; setPlaying(false);
+      wave.classList.add("loading");
+      msgEl.textContent = "Nummer laden...";
+      tapHint.textContent = "";
 
-      if (!trackData) {
-        msgEl.textContent = "Data nog niet geladen, probeer opnieuw.";
-        playBtn.classList.remove("loading");
-        return;
-      }
-
+      if (!trackData) { msgEl.textContent = "Data niet geladen."; return; }
       const track = trackData.find(t => String(t.id) === String(id));
-      if (!track) {
-        msgEl.textContent = "Kaart " + id + " niet gevonden.";
-        playBtn.classList.remove("loading");
-        return;
-      }
+      if (!track) { msgEl.textContent = "Kaart niet gevonden."; wave.classList.remove("loading"); return; }
 
       const preview = await deezerSearch(track.song, track.artist);
+      if (myVersion !== searchVersion) return;
 
-      if (myVersion !== searchVersion) return; // nieuwere scan gestart
+      wave.classList.remove("loading");
 
-      if (preview) {
-        audio.src = preview;
-        msgEl.textContent = "Druk op play";
-      } else {
-        msgEl.textContent = "Geen preview voor dit nummer.";
-      }
-      playBtn.classList.remove("loading");
+      if (!preview) { msgEl.textContent = "Geen preview beschikbaar."; return; }
+
+      audio.src = preview;
+      audio.currentTime = 0;
+      msgEl.textContent = "Geladen!";
+
+      audio.play()
+        .then(() => {
+          setPlaying(true);
+          msgEl.textContent = "Speelt af";
+          tapHint.textContent = "Tik op de golf om te pauzeren";
+        })
+        .catch(() => {
+          msgEl.textContent = "Tik op de golf om af te spelen";
+          tapHint.textContent = "";
+        });
     }
 
-    playBtn.addEventListener("click", () => {
-      if (!audio.src || playBtn.classList.contains("loading")) return;
-      if (audio.paused) {
-        audio.play().then(() => setPlaying(true)).catch(() => { msgEl.textContent = "Afspelen mislukt."; });
-      } else {
-        audio.pause();
-        setPlaying(false);
-      }
+    audio.addEventListener("ended", () => {
+      setPlaying(false);
+      msgEl.textContent = "Klaar";
+      tapHint.textContent = "Tik om opnieuw af te spelen";
     });
 
-    audio.addEventListener("ended", () => setPlaying(false));
-
     function setPlaying(state) {
-      iconPlay.style.display  = state ? "none" : "";
-      iconPause.style.display = state ? ""     : "none";
-      playBtn.classList.toggle("playing", state);
+      isPlaying = state;
+      wave.classList.toggle("paused", !state);
+      if (state) {
+        msgEl.textContent = "Speelt af";
+        tapHint.textContent = "Tik op de golf om te pauzeren";
+      }
     }
   </script>
 </body>
