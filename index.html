@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Frobster</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #1a1a2e;
+      color: #fff;
+      font-family: -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      letter-spacing: 0.18em;
+      margin-bottom: 3.5rem;
+      color: #e94560;
+      font-weight: 800;
+    }
+
+    #play-btn {
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      background: #e94560;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.1s, background 0.2s;
+      box-shadow: 0 0 50px rgba(233,69,96,0.45);
+      touch-action: manipulation;
+    }
+
+    #play-btn:active           { transform: scale(0.91); }
+    #play-btn.playing          { background: #16213e; box-shadow: 0 0 50px rgba(22,33,62,0.6); }
+    #play-btn.loading          { opacity: 0.5; pointer-events: none; }
+
+    #play-btn svg              { width: 52px; height: 52px; fill: #fff; }
+
+    #msg {
+      margin-top: 2rem;
+      font-size: 1rem;
+      color: #888;
+      min-height: 1.4rem;
+      text-align: center;
+      padding: 0 2rem;
+    }
+
+    #embed-wrapper {
+      position: fixed;
+      bottom: -9999px;
+      left: 0;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+    }
+    #embed-iframe { width: 300px; height: 80px; border: none; }
+  </style>
+</head>
+<body>
+
+  <h1>FROBSTER</h1>
+
+  <button id="play-btn" class="loading" aria-label="Speel af">
+    <svg id="icon-play"  viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+    <svg id="icon-pause" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6zm8-14v14h4V5z"/></svg>
+  </button>
+
+  <div id="msg">Laden…</div>
+
+  <div id="embed-wrapper">
+    <div id="embed-iframe"></div>
+  </div>
+
+  <script src="https://open.spotify.com/embed/iframe-api/v1" async></script>
+  <script>
+    const params   = new URLSearchParams(location.search);
+    const cardId   = params.get("id");
+    const btn      = document.getElementById("play-btn");
+    const msgEl    = document.getElementById("msg");
+    const iconPlay  = document.getElementById("icon-play");
+    const iconPause = document.getElementById("icon-pause");
+
+    let controller = null;
+    let playing    = false;
+
+    fetch("data.json")
+      .then(r => r.json())
+      .then(data => {
+        const track = data.find(t => t.id === cardId);
+        if (!track || !track.track_id) {
+          msgEl.textContent = track ? "Nummer niet beschikbaar." : "Kaart niet gevonden.";
+          btn.classList.remove("loading");
+          return;
+        }
+        window.onSpotifyIframeApiReady = (IFrameAPI) => {
+          const options = {
+            uri: `spotify:track:${track.track_id}`,
+            width: 300,
+            height: 80,
+          };
+          IFrameAPI.createController(
+            document.getElementById("embed-iframe"),
+            options,
+            (ctrl) => {
+              controller = ctrl;
+              btn.classList.remove("loading");
+              msgEl.textContent = "Druk op play";
+              ctrl.addListener("playback_update", (e) => {
+                if (e.data.isPaused && playing) setPlaying(false);
+              });
+            }
+          );
+        };
+        if (window.SpotifyIframeApiReady && window.onSpotifyIframeApiReady) {
+          window.onSpotifyIframeApiReady(window.SpotifyIframeApiReady);
+        }
+      })
+      .catch(() => {
+        msgEl.textContent = "Fout bij laden van data.";
+        btn.classList.remove("loading");
+      });
+
+    btn.addEventListener("click", () => {
+      if (!controller) return;
+      if (playing) { controller.pause(); setPlaying(false); }
+      else { controller.play(); setPlaying(true); msgEl.textContent = ""; }
+    });
+
+    function setPlaying(state) {
+      playing = state;
+      btn.classList.toggle("playing", state);
+      iconPlay.style.display  = state ? "none" : "";
+      iconPause.style.display = state ? "" : "none";
+    }
+  </script>
+</body>
+</html>
