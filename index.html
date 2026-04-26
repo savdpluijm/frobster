@@ -6,23 +6,10 @@
   <title>Frobster</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      background: #1a1a2e; color: #fff;
-      font-family: -apple-system, sans-serif;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      min-height: 100vh; user-select: none;
-      -webkit-tap-highlight-color: transparent;
-    }
+    body { background: #1a1a2e; color: #fff; font-family: -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; user-select: none; -webkit-tap-highlight-color: transparent; }
     h1 { font-size: 2.2rem; letter-spacing: 0.18em; margin-bottom: 2.5rem; color: #e94560; font-weight: 800; }
     #scanner-screen { display: flex; flex-direction: column; align-items: center; }
-    #scan-btn {
-      width: 130px; height: 130px; border-radius: 50%;
-      background: #e94560; border: none; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 0 50px rgba(233,69,96,0.45);
-      transition: transform 0.1s; touch-action: manipulation;
-    }
+    #scan-btn { width: 130px; height: 130px; border-radius: 50%; background: #e94560; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 50px rgba(233,69,96,0.45); transition: transform 0.1s; touch-action: manipulation; }
     #scan-btn:active { transform: scale(0.91); }
     #scan-btn svg { width: 52px; height: 52px; fill: #fff; }
     #scan-label { margin-top: 1.5rem; font-size: 1rem; color: #888; }
@@ -31,32 +18,16 @@
     #video { width: 280px; height: 280px; border-radius: 16px; object-fit: cover; border: 3px solid #e94560; }
     #canvas { display: none; }
     #scan-hint { margin-top: 1rem; font-size: 0.9rem; color: #888; }
-    #stop-btn {
-      margin-top: 1.2rem; background: none; border: 1px solid #555;
-      color: #aaa; padding: 0.5rem 1.5rem; border-radius: 999px;
-      cursor: pointer; font-size: 0.9rem;
-    }
+    #stop-btn { margin-top: 1.2rem; background: none; border: 1px solid #555; color: #aaa; padding: 0.5rem 1.5rem; border-radius: 999px; cursor: pointer; font-size: 0.9rem; }
     #player-screen { display: none; flex-direction: column; align-items: center; }
     #player-screen.active { display: flex; }
-    #play-btn {
-      width: 130px; height: 130px; border-radius: 50%;
-      background: #e94560; border: none; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: transform 0.1s, background 0.2s;
-      box-shadow: 0 0 50px rgba(233,69,96,0.45); touch-action: manipulation;
-    }
+    #play-btn { width: 130px; height: 130px; border-radius: 50%; background: #e94560; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.1s, background 0.2s; box-shadow: 0 0 50px rgba(233,69,96,0.45); touch-action: manipulation; }
     #play-btn:active { transform: scale(0.91); }
     #play-btn.playing { background: #16213e; box-shadow: 0 0 50px rgba(22,33,62,0.6); }
     #play-btn.loading { opacity: 0.5; pointer-events: none; }
     #play-btn svg { width: 52px; height: 52px; fill: #fff; }
-    #msg { margin-top: 1.5rem; font-size: 1rem; color: #888; min-height: 1.4rem; text-align: center; }
-    #new-scan-btn {
-      margin-top: 2rem; background: none; border: 1px solid #555;
-      color: #aaa; padding: 0.5rem 1.5rem; border-radius: 999px;
-      cursor: pointer; font-size: 0.9rem;
-    }
-    #embed-wrapper { position: fixed; bottom: -9999px; left: 0; width: 1px; height: 1px; overflow: hidden; }
-    #embed-iframe { width: 300px; height: 80px; border: none; }
+    #msg { margin-top: 1.5rem; font-size: 1rem; color: #888; min-height: 1.4rem; text-align: center; padding: 0 2rem; }
+    #new-scan-btn { margin-top: 2rem; background: none; border: 1px solid #555; color: #aaa; padding: 0.5rem 1.5rem; border-radius: 999px; cursor: pointer; font-size: 0.9rem; }
   </style>
 </head>
 <body>
@@ -81,9 +52,8 @@
     <div id="msg">Laden…</div>
     <button id="new-scan-btn">Nieuw kaartje scannen</button>
   </div>
-  <div id="embed-wrapper"><div id="embed-iframe"></div></div>
+  <audio id="audio"></audio>
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
-  <script src="https://open.spotify.com/embed/iframe-api/v1" async></script>
   <script>
     const params = new URLSearchParams(location.search);
     let cardId = params.get("id");
@@ -93,39 +63,27 @@
     const video         = document.getElementById("video");
     const canvas        = document.getElementById("canvas");
     const scanBtn       = document.getElementById("scan-btn");
+    const scanLabel     = document.getElementById("scan-label");
     const stopBtn       = document.getElementById("stop-btn");
     const newScanBtn    = document.getElementById("new-scan-btn");
     const playBtn       = document.getElementById("play-btn");
     const msgEl         = document.getElementById("msg");
     const iconPlay      = document.getElementById("icon-play");
     const iconPause     = document.getElementById("icon-pause");
-    const scanLabel     = document.getElementById("scan-label");
-    let stream = null, scanLoop = null, controller = null;
-    let playing = false, iframeApi = null, trackData = null;
-    fetch("data.json").then(r => r.json()).then(d => { trackData = d; });
-    window.onSpotifyIframeApiReady = (IFrameAPI) => { iframeApi = IFrameAPI; };
-    if (cardId) startPlayer(cardId);
+    const audio         = document.getElementById("audio");
+    let stream = null, scanLoop = null, trackData = null;
+    fetch("data.json").then(r => r.json()).then(d => { trackData = d; if (cardId) startPlayer(cardId); });
     scanBtn.addEventListener("click", startCamera);
     stopBtn.addEventListener("click", stopCamera);
-    newScanBtn.addEventListener("click", () => { stopPlayer(); showScanner(); });
-    function showScanner() {
-      playerScreen.classList.remove("active");
-      scannerScreen.style.display = "flex";
-    }
+    newScanBtn.addEventListener("click", () => { audio.pause(); setPlaying(false); playerScreen.classList.remove("active"); scannerScreen.style.display = "flex"; });
     function startCamera() {
       navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-        .then(s => {
-          stream = s; video.srcObject = s;
-          cameraWrap.classList.add("active");
-          scanBtn.style.display = "none"; scanLabel.style.display = "none";
-          scanLoop = requestAnimationFrame(tick);
-        })
-        .catch(() => { alert("Kan camera niet openen. Geef toestemming in je browser."); });
+        .then(s => { stream = s; video.srcObject = s; cameraWrap.classList.add("active"); scanBtn.style.display = "none"; scanLabel.style.display = "none"; scanLoop = requestAnimationFrame(tick); })
+        .catch(() => alert("Kan camera niet openen. Geef toestemming in je browser."));
     }
     function stopCamera() {
       if (stream) stream.getTracks().forEach(t => t.stop());
-      cancelAnimationFrame(scanLoop);
-      cameraWrap.classList.remove("active");
+      cancelAnimationFrame(scanLoop); cameraWrap.classList.remove("active");
       scanBtn.style.display = ""; scanLabel.style.display = "";
     }
     function tick() {
@@ -136,59 +94,44 @@
         const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const code = jsQR(img.data, img.width, img.height);
         if (code && code.data.includes("frobster")) {
-          const url = new URL(code.data);
-          const id = url.searchParams.get("id");
-          if (id) { stopCamera(); startPlayer(id); return; }
+          try { const id = new URL(code.data).searchParams.get("id"); if (id) { stopCamera(); startPlayer(id); return; } } catch(e) {}
         }
       }
       scanLoop = requestAnimationFrame(tick);
     }
-    function startPlayer(id) {
-      cardId = id;
-      scannerScreen.style.display = "none";
-      playerScreen.classList.add("active");
-      playBtn.classList.add("loading");
-      msgEl.textContent = "Laden…";
-      function init() {
-        if (!trackData) { setTimeout(init, 200); return; }
-        const track = trackData.find(t => t.id === cardId);
-        if (!track || !track.track_id) {
-          msgEl.textContent = "Nummer niet beschikbaar.";
-          playBtn.classList.remove("loading"); return;
-        }
-        if (controller) {
-          controller.loadUri("spotify:track:" + track.track_id);
-          controller.play();
-          playBtn.classList.remove("loading"); msgEl.textContent = ""; setPlaying(true); return;
-        }
-        const tryCreate = () => {
-          if (!iframeApi) { setTimeout(tryCreate, 200); return; }
-          iframeApi.createController(
-            document.getElementById("embed-iframe"),
-            { uri: "spotify:track:" + track.track_id, width: 300, height: 80 },
-            (ctrl) => {
-              controller = ctrl;
-              playBtn.classList.remove("loading");
-              msgEl.textContent = "Druk op play";
-              ctrl.addListener("playback_update", (e) => { if (e.data.isPaused && playing) setPlaying(false); });
-            }
-          );
-        };
-        tryCreate();
-      }
-      init();
+    function deezerSearch(song, artist) {
+      return new Promise((resolve) => {
+        const cb = "dz_" + Date.now();
+        const q  = encodeURIComponent('artist:"' + artist + '" track:"' + song + '"');
+        const s  = document.createElement("script");
+        s.src    = "https://api.deezer.com/search?q=" + q + "&limit=1&output=jsonp&callback=" + cb;
+        window[cb] = (data) => { delete window[cb]; s.remove(); resolve(data && data.data && data.data[0] ? data.data[0].preview : null); };
+        s.onerror = () => { delete window[cb]; s.remove(); resolve(null); };
+        document.head.appendChild(s);
+        setTimeout(() => { if (window[cb]) { delete window[cb]; s.remove(); resolve(null); } }, 5000);
+      });
     }
-    function stopPlayer() { if (controller && playing) controller.pause(); setPlaying(false); playBtn.classList.add("loading"); }
+    async function startPlayer(id) {
+      cardId = id;
+      scannerScreen.style.display = "none"; playerScreen.classList.add("active");
+      playBtn.classList.add("loading"); audio.pause(); audio.src = ""; setPlaying(false);
+      msgEl.textContent = "Zoeken…";
+      const track = trackData && trackData.find(t => t.id === id);
+      if (!track) { msgEl.textContent = "Kaart niet gevonden."; playBtn.classList.remove("loading"); return; }
+      const preview = await deezerSearch(track.song, track.artist);
+      if (preview) { audio.src = preview; msgEl.textContent = "Druk op play"; }
+      else { msgEl.textContent = "Geen preview gevonden."; }
+      playBtn.classList.remove("loading");
+    }
     playBtn.addEventListener("click", () => {
-      if (!controller) return;
-      if (playing) { controller.pause(); setPlaying(false); }
-      else { controller.play(); setPlaying(true); msgEl.textContent = ""; }
+      if (!audio.src) return;
+      if (audio.paused) { audio.play().then(() => setPlaying(true)).catch(() => msgEl.textContent = "Afspelen mislukt."); }
+      else { audio.pause(); setPlaying(false); }
     });
+    audio.addEventListener("ended", () => setPlaying(false));
     function setPlaying(state) {
-      playing = state;
+      iconPlay.style.display = state ? "none" : ""; iconPause.style.display = state ? "" : "none";
       playBtn.classList.toggle("playing", state);
-      iconPlay.style.display = state ? "none" : "";
-      iconPause.style.display = state ? "" : "none";
     }
   </script>
 </body>
