@@ -6,12 +6,23 @@
   <title>Frobster</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #1a1a2e; color: #fff; font-family: -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; user-select: none; -webkit-tap-highlight-color: transparent; }
+    body {
+      background: #1a1a2e; color: #fff;
+      font-family: -apple-system, sans-serif;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      min-height: 100vh; user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
     h1 { font-size: 2.2rem; letter-spacing: 0.18em; margin-bottom: 2.5rem; color: #e94560; font-weight: 800; }
-
-    /* Scanner */
     #scanner-screen { display: flex; flex-direction: column; align-items: center; }
-    #scan-btn { width: 130px; height: 130px; border-radius: 50%; background: #e94560; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 50px rgba(233,69,96,0.45); transition: transform 0.1s; touch-action: manipulation; }
+    #scan-btn {
+      width: 130px; height: 130px; border-radius: 50%;
+      background: #e94560; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 50px rgba(233,69,96,0.45);
+      transition: transform 0.1s; touch-action: manipulation;
+    }
     #scan-btn:active { transform: scale(0.91); }
     #scan-btn svg { width: 52px; height: 52px; fill: #fff; }
     #scan-label { margin-top: 1.5rem; font-size: 1rem; color: #888; }
@@ -20,32 +31,21 @@
     #video { width: 280px; height: 280px; border-radius: 16px; object-fit: cover; border: 3px solid #e94560; }
     #canvas { display: none; }
     #scan-hint { margin-top: 1rem; font-size: 0.9rem; color: #888; }
-    #stop-btn { margin-top: 1.2rem; background: none; border: 1px solid #555; color: #aaa; padding: 0.5rem 1.5rem; border-radius: 999px; cursor: pointer; font-size: 0.9rem; }
-
-    /* Player */
+    #stop-btn {
+      margin-top: 1.2rem; background: none; border: 1px solid #555;
+      color: #aaa; padding: 0.5rem 1.5rem; border-radius: 999px;
+      cursor: pointer; font-size: 0.9rem;
+    }
     #player-screen { display: none; flex-direction: column; align-items: center; }
     #player-screen.active { display: flex; }
-
-    /* Soundwave */
-    .wave { display: flex; align-items: flex-end; justify-content: center; gap: 5px; height: 80px; width: 130px; cursor: pointer; padding: 10px 0; }
-    .wave span { width: 8px; border-radius: 4px; background: #e94560; transition: background 0.3s; }
-    .wave.loading span { background: #555; height: 6px !important; animation: none !important; }
-    .wave.paused span { animation-play-state: paused !important; }
-    .wave span:nth-child(1) { animation: bar 0.9s ease-in-out infinite; animation-delay: 0.0s; }
-    .wave span:nth-child(2) { animation: bar 0.9s ease-in-out infinite; animation-delay: 0.15s; }
-    .wave span:nth-child(3) { animation: bar 0.9s ease-in-out infinite; animation-delay: 0.3s; }
-    .wave span:nth-child(4) { animation: bar 0.9s ease-in-out infinite; animation-delay: 0.45s; }
-    .wave span:nth-child(5) { animation: bar 0.9s ease-in-out infinite; animation-delay: 0.3s; }
-    .wave span:nth-child(6) { animation: bar 0.9s ease-in-out infinite; animation-delay: 0.15s; }
-    .wave span:nth-child(7) { animation: bar 0.9s ease-in-out infinite; animation-delay: 0.0s; }
-    @keyframes bar {
-      0%, 100% { height: 8px; }
-      50%       { height: 56px; }
+    #spotify-embed { width: 320px; max-width: 92vw; height: 352px; border: 0; border-radius: 16px; box-shadow: 0 0 40px rgba(233,69,96,0.25); background: #16213e; }
+    #msg { margin-top: 1.2rem; font-size: 1rem; color: #888; min-height: 1.4rem; text-align: center; padding: 0 2rem; max-width: 320px; }
+    #hint { margin-top: 0.4rem; font-size: 0.78rem; color: #555; text-align: center; padding: 0 2rem; max-width: 320px; line-height: 1.4; }
+    #new-scan-btn {
+      margin-top: 2rem; background: none; border: 1px solid #555;
+      color: #aaa; padding: 0.5rem 1.5rem; border-radius: 999px;
+      cursor: pointer; font-size: 0.9rem;
     }
-
-    #msg { margin-top: 1.2rem; font-size: 1rem; color: #888; min-height: 1.4rem; text-align: center; padding: 0 2rem; }
-    #tap-hint { margin-top: 0.5rem; font-size: 0.8rem; color: #555; min-height: 1rem; }
-    #new-scan-btn { margin-top: 2rem; background: none; border: 1px solid #555; color: #aaa; padding: 0.5rem 1.5rem; border-radius: 999px; cursor: pointer; font-size: 0.9rem; }
   </style>
 </head>
 <body>
@@ -65,17 +65,16 @@
   </div>
 
   <div id="player-screen">
-    <div class="wave loading" id="wave">
-      <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
-    </div>
-    <div id="msg">Zoeken...</div>
-    <div id="tap-hint"></div>
+    <iframe id="spotify-embed" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+    <div id="msg"></div>
+    <div id="hint">Log in op Spotify (Premium) om het hele nummer te horen — anders 30s preview.</div>
     <button id="new-scan-btn">Nieuw kaartje scannen</button>
   </div>
-
-  <audio id="audio"></audio>
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   <script>
+    const params = new URLSearchParams(location.search);
+    let cardId = params.get("id");
+
     const scannerScreen = document.getElementById("scanner-screen");
     const playerScreen  = document.getElementById("player-screen");
     const cameraWrap    = document.getElementById("camera-wrap");
@@ -85,44 +84,23 @@
     const scanLabel     = document.getElementById("scan-label");
     const stopBtn       = document.getElementById("stop-btn");
     const newScanBtn    = document.getElementById("new-scan-btn");
-    const wave          = document.getElementById("wave");
+    const spotifyEmbed  = document.getElementById("spotify-embed");
     const msgEl         = document.getElementById("msg");
-    const tapHint       = document.getElementById("tap-hint");
-    const audio         = document.getElementById("audio");
 
     let stream = null, scanLoop = null, trackData = null;
-    let searchVersion = 0;
-    let lastScannedId = null;
-    let scanCooldown  = false;
-    let isPlaying     = false;
 
-    const params = new URLSearchParams(location.search);
-    const urlId  = params.get("id");
+    fetch("data.json").then(r => r.json()).then(d => {
+      trackData = d;
+      if (cardId) startPlayer(cardId);
+    });
 
-    fetch("data.json?v=" + Date.now())
-      .then(r => r.json())
-      .then(d => { trackData = d; if (urlId) startPlayer(urlId); });
-
-    // Scanner
+    // ── Scanner ──
     scanBtn.addEventListener("click", startCamera);
     stopBtn.addEventListener("click", stopCamera);
     newScanBtn.addEventListener("click", () => {
-      audio.pause();
-      setPlaying(false);
-      lastScannedId = null;
+      spotifyEmbed.src = "";
       playerScreen.classList.remove("active");
       scannerScreen.style.display = "flex";
-    });
-
-    // Tik op wave = pause/play
-    wave.addEventListener("click", () => {
-      if (wave.classList.contains("loading")) return;
-      if (audio.paused) {
-        audio.play().then(() => setPlaying(true)).catch(() => {});
-      } else {
-        audio.pause();
-        setPlaying(false);
-      }
     });
 
     function startCamera() {
@@ -131,107 +109,49 @@
           stream = s; video.srcObject = s;
           cameraWrap.classList.add("active");
           scanBtn.style.display = "none"; scanLabel.style.display = "none";
-          scanCooldown = false;
           scanLoop = requestAnimationFrame(tick);
         })
-        .catch(() => alert("Kan camera niet openen."));
+        .catch(() => alert("Kan camera niet openen. Geef toestemming in je browser."));
     }
 
     function stopCamera() {
-      if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
-      if (scanLoop) { cancelAnimationFrame(scanLoop); scanLoop = null; }
+      if (stream) stream.getTracks().forEach(t => t.stop());
+      cancelAnimationFrame(scanLoop);
       cameraWrap.classList.remove("active");
       scanBtn.style.display = ""; scanLabel.style.display = "";
     }
 
     function tick() {
-      if (!scanCooldown && video.readyState === video.HAVE_ENOUGH_DATA) {
+      if (video.readyState === video.HAVE_ENOUGH_DATA) {
         const ctx = canvas.getContext("2d");
         canvas.width = video.videoWidth; canvas.height = video.videoHeight;
         ctx.drawImage(video, 0, 0);
-        const img  = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const code = jsQR(img.data, img.width, img.height);
-        if (code && code.data) {
-          let id = null;
-          try { id = new URL(code.data).searchParams.get("id"); } catch(e) {
-            const m = code.data.match(/[?&]id=([^&]+)/); if (m) id = m[1];
-          }
-          if (id && id !== lastScannedId) {
-            scanCooldown = true; lastScannedId = id;
-            stopCamera(); startPlayer(id); return;
-          }
+        if (code && code.data.includes("frobster")) {
+          try {
+            const id = new URL(code.data).searchParams.get("id");
+            if (id) { stopCamera(); startPlayer(id); return; }
+          } catch(e) {}
         }
       }
       scanLoop = requestAnimationFrame(tick);
     }
 
-    function deezerSearch(song, artist) {
-      return new Promise((resolve) => {
-        const cb = "dz_" + Date.now() + "_" + Math.random().toString(36).slice(2);
-        const q  = encodeURIComponent(artist + " " + song);
-        const s  = document.createElement("script");
-        s.src    = "https://api.deezer.com/search?q=" + q + "&limit=1&output=jsonp&callback=" + cb;
-        let done = false;
-        window[cb] = (data) => {
-          if (done) return; done = true; delete window[cb]; s.remove();
-          resolve(data && data.data && data.data[0] ? data.data[0].preview : null);
-        };
-        s.onerror = () => { if (done) return; done = true; delete window[cb]; s.remove(); resolve(null); };
-        document.head.appendChild(s);
-        setTimeout(() => { if (!done) { done = true; if(window[cb]) delete window[cb]; s.remove(); resolve(null); } }, 6000);
-      });
-    }
-
-    async function startPlayer(id) {
-      const myVersion = ++searchVersion;
-
+    // ── Player: Spotify Embed ──
+    function startPlayer(id) {
+      cardId = id;
       scannerScreen.style.display = "none";
       playerScreen.classList.add("active");
-      audio.pause(); audio.src = ""; setPlaying(false);
-      wave.classList.add("loading");
-      msgEl.textContent = "Nummer laden...";
-      tapHint.textContent = "";
+      msgEl.textContent = "";
 
-      if (!trackData) { msgEl.textContent = "Data niet geladen."; return; }
-      const track = trackData.find(t => String(t.id) === String(id));
-      if (!track) { msgEl.textContent = "Kaart niet gevonden."; wave.classList.remove("loading"); return; }
-
-      const preview = await deezerSearch(track.song, track.artist);
-      if (myVersion !== searchVersion) return;
-
-      wave.classList.remove("loading");
-
-      if (!preview) { msgEl.textContent = "Geen preview beschikbaar."; return; }
-
-      audio.src = preview;
-      audio.currentTime = 0;
-      msgEl.textContent = "Geladen!";
-
-      audio.play()
-        .then(() => {
-          setPlaying(true);
-          msgEl.textContent = "Speelt af";
-          tapHint.textContent = "Tik op de golf om te pauzeren";
-        })
-        .catch(() => {
-          msgEl.textContent = "Tik op de golf om af te spelen";
-          tapHint.textContent = "";
-        });
-    }
-
-    audio.addEventListener("ended", () => {
-      setPlaying(false);
-      msgEl.textContent = "Klaar";
-      tapHint.textContent = "Tik om opnieuw af te spelen";
-    });
-
-    function setPlaying(state) {
-      isPlaying = state;
-      wave.classList.toggle("paused", !state);
-      if (state) {
-        msgEl.textContent = "Speelt af";
-        tapHint.textContent = "Tik op de golf om te pauzeren";
+      const track = trackData?.find(t => t.id === id);
+      if (!track || !track.track_id) {
+        spotifyEmbed.src = "";
+        msgEl.textContent = "Kaart niet gevonden.";
+        return;
       }
+      spotifyEmbed.src = `https://open.spotify.com/embed/track/${track.track_id}?utm_source=generator&autoplay=1`;
     }
   </script>
 </body>
