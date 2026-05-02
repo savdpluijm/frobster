@@ -36,8 +36,9 @@
       color: #aaa; padding: 0.5rem 1.5rem; border-radius: 999px;
       cursor: pointer; font-size: 0.9rem;
     }
-    #player-screen { display: none; flex-direction: column; align-items: center; }
+    #player-screen { display: none; flex-direction: column; align-items: center; position: relative; z-index: 10; }
     #player-screen.active { display: flex; }
+    body.player-active { background: #1a1a2e; }
     #play-btn {
       width: 130px; height: 130px; border-radius: 50%;
       background: #e94560; border: none; cursor: pointer;
@@ -56,7 +57,11 @@
       color: #aaa; padding: 0.5rem 1.5rem; border-radius: 999px;
       cursor: pointer; font-size: 0.9rem;
     }
-    #spotify-host { position: absolute; left: -9999px; top: -9999px; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; }
+    /* Spotify iframe MOET zichtbaar zijn (autoplay policy), maar wordt bedekt door een ondoorzichtige overlay */
+    #spotify-host { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 320px; height: 80px; z-index: 1; }
+    #spotify-host iframe { width: 100%; height: 100%; border: 0; }
+    #cover-overlay { position: fixed; inset: 0; background: #1a1a2e; z-index: 5; pointer-events: none; display: none; }
+    #cover-overlay.active { display: block; }
   </style>
 </head>
 <body>
@@ -86,6 +91,7 @@
   </div>
 
   <div id="spotify-host"><div id="spotify-mount"></div></div>
+  <div id="cover-overlay"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   <script src="https://open.spotify.com/embed/iframe-api/v1" async></script>
@@ -127,6 +133,8 @@
       if (controller) { try { controller.pause(); } catch(e){} }
       isPlaying = false; setIcon(false);
       playerScreen.classList.remove("active");
+      document.body.classList.remove("player-active");
+      document.getElementById("cover-overlay").classList.remove("active");
       scannerScreen.style.display = "flex";
     });
 
@@ -170,6 +178,8 @@
       cardId = id;
       scannerScreen.style.display = "none";
       playerScreen.classList.add("active");
+      document.body.classList.add("player-active");
+      document.getElementById("cover-overlay").classList.add("active");
       playBtn.classList.add("loading");
       msgEl.textContent = "Laden…";
       setIcon(false);
@@ -190,18 +200,26 @@
       mount.innerHTML = "<div></div>";
       IFrameAPI.createController(
         mount.firstElementChild,
-        { uri: `spotify:track:${trackId}`, width: 300, height: 80 },
+        { uri: `spotify:track:${trackId}` },
         (ctrl) => {
           controller = ctrl;
-          ctrl.addListener("ready", () => {
+          // Probeer direct te spelen — ready-event vuurt vaak vóór listener-registratie
+          let playedOnce = false;
+          const tryPlay = () => {
+            if (playedOnce) return;
+            playedOnce = true;
             playBtn.classList.remove("loading");
             msgEl.textContent = "";
             try { ctrl.play(); } catch(e) {}
-          });
+          };
+          ctrl.addListener("ready", tryPlay);
           ctrl.addListener("playback_update", (e) => {
+            tryPlay();
             isPlaying = !e.data.isPaused;
             setIcon(isPlaying);
           });
+          // Fallback na 1.5s: laat play-knop in elk geval klikbaar worden
+          setTimeout(() => { if (!playedOnce) { playBtn.classList.remove("loading"); msgEl.textContent = "Druk op play"; } }, 1500);
         }
       );
     }
