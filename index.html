@@ -57,11 +57,10 @@
       color: #aaa; padding: 0.5rem 1.5rem; border-radius: 999px;
       cursor: pointer; font-size: 0.9rem;
     }
-    /* Spotify iframe MOET zichtbaar zijn (autoplay policy), maar wordt bedekt door een ondoorzichtige overlay */
-    #spotify-host { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 320px; height: 80px; z-index: 1; }
+    /* Spotify iframe MOET zichtbaar zijn voor autoplay-policy, maar wordt visueel weggeclipt
+       (iOS Safari rendert iframes boven andere DOM-elementen, dus z-index overlay werkt niet) */
+    #spotify-host { position: fixed; left: 0; top: 0; width: 320px; height: 80px; z-index: 1; clip-path: inset(50%); -webkit-clip-path: inset(50%); pointer-events: none; }
     #spotify-host iframe { width: 100%; height: 100%; border: 0; }
-    #cover-overlay { position: fixed; inset: 0; background: #1a1a2e; z-index: 5; pointer-events: none; display: none; }
-    #cover-overlay.active { display: block; }
   </style>
 </head>
 <body>
@@ -91,7 +90,6 @@
   </div>
 
   <div id="spotify-host"><div id="spotify-mount"></div></div>
-  <div id="cover-overlay"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   <script src="https://open.spotify.com/embed/iframe-api/v1" async></script>
@@ -134,7 +132,6 @@
       isPlaying = false; setIcon(false);
       playerScreen.classList.remove("active");
       document.body.classList.remove("player-active");
-      document.getElementById("cover-overlay").classList.remove("active");
       scannerScreen.style.display = "flex";
     });
 
@@ -179,7 +176,6 @@
       scannerScreen.style.display = "none";
       playerScreen.classList.add("active");
       document.body.classList.add("player-active");
-      document.getElementById("cover-overlay").classList.add("active");
       playBtn.classList.add("loading");
       msgEl.textContent = "Laden…";
       setIcon(false);
