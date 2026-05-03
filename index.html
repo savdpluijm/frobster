@@ -14,7 +14,7 @@
       min-height: 100vh; user-select: none;
       -webkit-tap-highlight-color: transparent;
     }
-    h1 { font-size: 2.2rem; letter-spacing: 0.18em; margin-bottom: 2.5rem; color: #e94560; font-weight: 800; position: relative; z-index: 10; }
+    h1 { font-size: 2.2rem; letter-spacing: 0.18em; margin-bottom: 2.5rem; color: #e94560; font-weight: 800; }
     #scanner-screen { display: flex; flex-direction: column; align-items: center; }
     #scan-btn {
       width: 130px; height: 130px; border-radius: 50%;
@@ -36,31 +36,15 @@
       color: #aaa; padding: 0.5rem 1.5rem; border-radius: 999px;
       cursor: pointer; font-size: 0.9rem;
     }
-    #player-screen { display: none; flex-direction: column; align-items: center; position: relative; z-index: 10; }
+    #player-screen { display: none; flex-direction: column; align-items: center; }
     #player-screen.active { display: flex; }
-    body.player-active { background: #1a1a2e; }
-    #play-btn {
-      width: 130px; height: 130px; border-radius: 50%;
-      background: #e94560; border: none; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: transform 0.1s, background 0.2s;
-      box-shadow: 0 0 50px rgba(233,69,96,0.45); touch-action: manipulation;
-    }
-    #play-btn:active { transform: scale(0.91); }
-    #play-btn.playing { background: #16213e; box-shadow: 0 0 50px rgba(22,33,62,0.6); }
-    #play-btn.loading { opacity: 0.5; pointer-events: none; }
-    #play-btn svg { width: 52px; height: 52px; fill: #fff; }
-    #msg { margin-top: 1.5rem; font-size: 1rem; color: #888; min-height: 1.4rem; text-align: center; padding: 0 2rem; max-width: 320px; }
-    #hint { margin-top: 0.4rem; font-size: 0.78rem; color: #555; text-align: center; padding: 0 2rem; max-width: 320px; line-height: 1.4; }
+    #spotify-frame { width: 320px; max-width: 92vw; height: 352px; border: 0; border-radius: 16px; background: #16213e; box-shadow: 0 0 40px rgba(233,69,96,0.25); }
+    #msg { margin-top: 1rem; font-size: 0.9rem; color: #888; min-height: 1.2rem; text-align: center; padding: 0 2rem; max-width: 320px; }
     #new-scan-btn {
-      margin-top: 2rem; background: none; border: 1px solid #555;
+      margin-top: 1.5rem; background: none; border: 1px solid #555;
       color: #aaa; padding: 0.5rem 1.5rem; border-radius: 999px;
       cursor: pointer; font-size: 0.9rem;
     }
-    /* Spotify iframe MOET zichtbaar zijn voor autoplay-policy, maar wordt visueel weggeclipt
-       (iOS Safari rendert iframes boven andere DOM-elementen, dus z-index overlay werkt niet) */
-    #spotify-host { position: fixed; left: 0; top: 0; width: 320px; height: 80px; z-index: 1; clip-path: inset(50%); -webkit-clip-path: inset(50%); pointer-events: none; }
-    #spotify-host iframe { width: 100%; height: 100%; border: 0; }
   </style>
 </head>
 <body>
@@ -80,19 +64,12 @@
   </div>
 
   <div id="player-screen">
-    <button id="play-btn" class="loading" aria-label="Speel af">
-      <svg id="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-      <svg id="icon-pause" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6zm8-14v14h4V5z"/></svg>
-    </button>
-    <div id="msg">Laden…</div>
-    <div id="hint">Log in op Spotify (Premium) voor het volledige nummer.</div>
+    <iframe id="spotify-frame" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+    <div id="msg"></div>
     <button id="new-scan-btn">Nieuw kaartje scannen</button>
   </div>
 
-  <div id="spotify-host"><div id="spotify-mount"></div></div>
-
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
-  <script src="https://open.spotify.com/embed/iframe-api/v1" async></script>
   <script>
     const params = new URLSearchParams(location.search);
     let cardId = params.get("id");
@@ -106,32 +83,21 @@
     const scanLabel     = document.getElementById("scan-label");
     const stopBtn       = document.getElementById("stop-btn");
     const newScanBtn    = document.getElementById("new-scan-btn");
-    const playBtn       = document.getElementById("play-btn");
-    const iconPlay      = document.getElementById("icon-play");
-    const iconPause     = document.getElementById("icon-pause");
+    const spotifyFrame  = document.getElementById("spotify-frame");
     const msgEl         = document.getElementById("msg");
 
     let stream = null, scanLoop = null, trackData = null;
-    let IFrameAPI = null, controller = null, isPlaying = false, pendingTrackId = null;
 
     fetch("data.json").then(r => r.json()).then(d => {
       trackData = d;
       if (cardId) startPlayer(cardId);
     });
 
-    window.onSpotifyIframeApiReady = (api) => {
-      IFrameAPI = api;
-      if (pendingTrackId) loadTrack(pendingTrackId);
-    };
-
-    // ── Scanner ──
     scanBtn.addEventListener("click", startCamera);
     stopBtn.addEventListener("click", stopCamera);
     newScanBtn.addEventListener("click", () => {
-      if (controller) { try { controller.pause(); } catch(e){} }
-      isPlaying = false; setIcon(false);
+      spotifyFrame.src = "";
       playerScreen.classList.remove("active");
-      document.body.classList.remove("player-active");
       scannerScreen.style.display = "flex";
     });
 
@@ -170,65 +136,19 @@
       scanLoop = requestAnimationFrame(tick);
     }
 
-    // ── Player ──
     function startPlayer(id) {
       cardId = id;
       scannerScreen.style.display = "none";
       playerScreen.classList.add("active");
-      document.body.classList.add("player-active");
-      playBtn.classList.add("loading");
-      msgEl.textContent = "Laden…";
-      setIcon(false);
+      msgEl.textContent = "";
 
       const track = trackData?.find(t => t.id === id);
       if (!track || !track.track_id) {
+        spotifyFrame.src = "";
         msgEl.textContent = "Kaart niet gevonden.";
-        playBtn.classList.remove("loading");
         return;
       }
-      if (IFrameAPI) loadTrack(track.track_id);
-      else pendingTrackId = track.track_id;
-    }
-
-    function loadTrack(trackId) {
-      pendingTrackId = null;
-      const mount = document.getElementById("spotify-mount");
-      mount.innerHTML = "<div></div>";
-      IFrameAPI.createController(
-        mount.firstElementChild,
-        { uri: `spotify:track:${trackId}` },
-        (ctrl) => {
-          controller = ctrl;
-          // Probeer direct te spelen — ready-event vuurt vaak vóór listener-registratie
-          let playedOnce = false;
-          const tryPlay = () => {
-            if (playedOnce) return;
-            playedOnce = true;
-            playBtn.classList.remove("loading");
-            msgEl.textContent = "";
-            try { ctrl.play(); } catch(e) {}
-          };
-          ctrl.addListener("ready", tryPlay);
-          ctrl.addListener("playback_update", (e) => {
-            tryPlay();
-            isPlaying = !e.data.isPaused;
-            setIcon(isPlaying);
-          });
-          // Fallback na 1.5s: laat play-knop in elk geval klikbaar worden
-          setTimeout(() => { if (!playedOnce) { playBtn.classList.remove("loading"); msgEl.textContent = "Druk op play"; } }, 1500);
-        }
-      );
-    }
-
-    playBtn.addEventListener("click", () => {
-      if (!controller) return;
-      try { controller.togglePlay(); } catch(e) {}
-    });
-
-    function setIcon(playing) {
-      iconPlay.style.display  = playing ? "none" : "";
-      iconPause.style.display = playing ? "" : "none";
-      playBtn.classList.toggle("playing", playing);
+      spotifyFrame.src = `https://open.spotify.com/embed/track/${track.track_id}?utm_source=generator`;
     }
   </script>
 </body>
