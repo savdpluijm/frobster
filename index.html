@@ -188,25 +188,25 @@
         { uri: `spotify:track:${trackId}` },
         (ctrl) => {
           controller = ctrl;
-          let seekDone = false;
-          let seekAttempts = 0;
+          let didResetAfterPlay = false;
           const forceStart = () => {
-            seekAttempts++;
             try { ctrl.seek(0); } catch(e) {}
           };
           ctrl.addListener("ready", () => {
+            // Seek(0) vÃ³Ã³r play â overschrijft Spotify's "smart resume" position
             forceStart();
-            // Spotify negeert seek(0) soms bij eerste call â herhaal nog 2x in eerste 2s
-            setTimeout(forceStart, 500);
+            setTimeout(forceStart, 300);
+            setTimeout(forceStart, 800);
             setTimeout(forceStart, 1500);
           });
           ctrl.addListener("playback_update", (e) => {
-            // Als positie > 2s en we deden < 5 attempts, forceer terug naar 0
-            if (!seekDone && e.data.position > 2000 && seekAttempts < 5) {
-              forceStart();
-            } else if (e.data.position > 0 && e.data.position < 2000) {
-              // Eenmaal afspelend dichtbij 0 â accepteer het
-              seekDone = true;
+            // Eerste keer dat we afspelend zijn (na user-tap op play): forceer seek(0) Ã©Ã©n keer
+            // Hierbij respecteert Spotify de seek wÃ©l, want we zijn al aan het streamen
+            if (!didResetAfterPlay && !e.data.isPaused && e.data.position > 0) {
+              didResetAfterPlay = true;
+              if (e.data.position > 1500) {
+                forceStart();
+              }
             }
           });
         }
