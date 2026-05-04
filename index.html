@@ -38,20 +38,40 @@
     }
     #player-screen { display: none; flex-direction: column; align-items: center; }
     #player-screen.active { display: flex; }
-    #play-btn {
-      width: 160px; height: 160px; border-radius: 50%;
-      background: #1DB954; border: none; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 0 60px rgba(29,185,84,0.45);
-      transition: transform 0.1s; touch-action: manipulation;
-      text-decoration: none;
+    #player-frame {
+      width: 360px; max-width: 96vw; height: 80px;
+      border-radius: 16px; overflow: hidden;
+      background: #1a1a2e;
+      box-shadow: 0 0 40px rgba(233,69,96,0.25);
+      position: relative;
     }
-    #play-btn:active { transform: scale(0.94); }
-    #play-btn svg { width: 64px; height: 64px; fill: #fff; margin-left: 6px; }
-    #play-label { margin-top: 1.5rem; font-size: 1rem; color: #aaa; letter-spacing: 0.05em; }
+    #player-frame::before {
+      content: "FROBSTER";
+      position: absolute; left: 24px; top: 50%; transform: translateY(-50%);
+      font-size: 1.2rem; letter-spacing: 0.18em; color: #e94560; font-weight: 800;
+      pointer-events: none; z-index: 1;
+    }
+    /* iframe wordt gepositioneerd zodat alleen het rechter play-knop-venster zichtbaar is via clip-path */
+    #spotify-mount { position: absolute; right: 0; top: 0; width: 360px; height: 80px; }
+    #spotify-mount iframe {
+      width: 360px !important; height: 80px !important; border: 0;
+      /* clip alleen 70px aan de rechterkant â play-knop sectie */
+      clip-path: inset(0 4px 0 290px);
+      -webkit-clip-path: inset(0 4px 0 290px);
+    }
+    #restart-btn {
+      margin-top: 1.2rem; background: #e94560; border: none;
+      color: #fff; padding: 0.7rem 1.6rem; border-radius: 999px;
+      cursor: pointer; font-size: 0.95rem; font-weight: 600;
+      box-shadow: 0 0 20px rgba(233,69,96,0.35);
+      touch-action: manipulation;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    #restart-btn:active { transform: scale(0.96); }
+    #restart-btn svg { width: 18px; height: 18px; fill: #fff; }
     #msg { margin-top: 1rem; font-size: 0.9rem; color: #888; min-height: 1.2rem; text-align: center; padding: 0 2rem; max-width: 320px; }
     #new-scan-btn {
-      margin-top: 2rem; background: none; border: 1px solid #555;
+      margin-top: 1.5rem; background: none; border: 1px solid #555;
       color: #aaa; padding: 0.5rem 1.5rem; border-radius: 999px;
       cursor: pointer; font-size: 0.9rem;
     }
@@ -74,15 +94,19 @@
   </div>
 
   <div id="player-screen">
-    <a id="play-btn" aria-label="Speel af in Spotify">
-      <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-    </a>
-    <p id="play-label">Tik om af te spelen in Spotify</p>
+    <div id="player-frame">
+      <div id="spotify-mount"></div>
+    </div>
+    <button id="restart-btn" aria-label="Start vanaf het begin">
+      <svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+      Start vanaf begin
+    </button>
     <div id="msg"></div>
     <button id="new-scan-btn">Nieuw kaartje scannen</button>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  <script src="https://open.spotify.com/embed/iframe-api/v1" async></script>
   <script>
     const params = new URLSearchParams(location.search);
     let cardId = params.get("id");
@@ -95,22 +119,40 @@
     const scanBtn       = document.getElementById("scan-btn");
     const scanLabel     = document.getElementById("scan-label");
     const stopBtn       = document.getElementById("stop-btn");
-    const playBtn       = document.getElementById("play-btn");
     const newScanBtn    = document.getElementById("new-scan-btn");
+    const restartBtn    = document.getElementById("restart-btn");
     const msgEl         = document.getElementById("msg");
 
     let stream = null, scanLoop = null, trackData = null;
+    let IFrameAPI = null, controller = null, pendingTrackId = null;
 
     fetch("data.json").then(r => r.json()).then(d => {
       trackData = d;
-      if (cardId) showPlayer(cardId);
+      if (cardId) startPlayer(cardId);
     });
+
+    window.onSpotifyIframeApiReady = (api) => {
+      IFrameAPI = api;
+      if (pendingTrackId) loadTrack(pendingTrackId);
+    };
 
     scanBtn.addEventListener("click", startCamera);
     stopBtn.addEventListener("click", stopCamera);
     newScanBtn.addEventListener("click", () => {
+      if (controller) { try { controller.pause(); } catch(e){} }
       playerScreen.classList.remove("active");
       scannerScreen.style.display = "flex";
+    });
+
+    // Restart-knop: forceer terug naar 0:00 + speel af
+    restartBtn.addEventListener("click", () => {
+      if (!controller) return;
+      try {
+        controller.seek(0);
+        // Soms negeert Spotify de eerste seek vlak na laden â dus nog een keer na korte delay
+        setTimeout(() => { try { controller.seek(0); controller.play(); } catch(e){} }, 150);
+        setTimeout(() => { try { controller.seek(0); } catch(e){} }, 600);
+      } catch(e) {}
     });
 
     function startCamera() {
@@ -141,14 +183,14 @@
         if (code && code.data.includes("frobster")) {
           try {
             const id = new URL(code.data).searchParams.get("id");
-            if (id) { stopCamera(); showPlayer(id); return; }
+            if (id) { stopCamera(); startPlayer(id); return; }
           } catch(e) {}
         }
       }
       scanLoop = requestAnimationFrame(tick);
     }
 
-    function showPlayer(id) {
+    function startPlayer(id) {
       cardId = id;
       scannerScreen.style.display = "none";
       playerScreen.classList.add("active");
@@ -157,12 +199,28 @@
       const track = trackData?.find(t => t.id === id);
       if (!track || !track.track_id) {
         msgEl.textContent = "Kaart niet gevonden.";
-        playBtn.removeAttribute("href");
         return;
       }
-      // Spotify deeplink: probeert eerst de native app, valt anders terug op de web-player.
-      // De native app respecteert seek=0 altijd en speelt het volledige nummer (Premium).
-      playBtn.setAttribute("href", `https://open.spotify.com/track/${track.track_id}`);
+      if (IFrameAPI) loadTrack(track.track_id);
+      else pendingTrackId = track.track_id;
+    }
+
+    function loadTrack(trackId) {
+      pendingTrackId = null;
+      const mount = document.getElementById("spotify-mount");
+      mount.innerHTML = "<div></div>";
+      IFrameAPI.createController(
+        mount.firstElementChild,
+        { uri: `spotify:track:${trackId}` },
+        (ctrl) => {
+          controller = ctrl;
+          ctrl.addListener("ready", () => {
+            // Best-effort seek(0) bij ready â soms werkt het, soms niet (smart-resume)
+            try { ctrl.seek(0); } catch(e){}
+            setTimeout(() => { try { ctrl.seek(0); } catch(e){} }, 500);
+          });
+        }
+      );
     }
   </script>
 </body>
