@@ -125,6 +125,7 @@
 
     let stream = null, scanLoop = null, trackData = null;
     let IFrameAPI = null, controller = null, pendingTrackId = null;
+    let currentTrackId = null;
 
     fetch("data.json").then(r => r.json()).then(d => {
       trackData = d;
@@ -144,15 +145,12 @@
       scannerScreen.style.display = "flex";
     });
 
-    // Restart-knop: forceer terug naar 0:00 + speel af
+    // Restart-knop: gooi iframe weg en mount 'm opnieuw â omzeilt Spotify's smart-resume cache
     restartBtn.addEventListener("click", () => {
-      if (!controller) return;
-      try {
-        controller.seek(0);
-        // Soms negeert Spotify de eerste seek vlak na laden â dus nog een keer na korte delay
-        setTimeout(() => { try { controller.seek(0); controller.play(); } catch(e){} }, 150);
-        setTimeout(() => { try { controller.seek(0); } catch(e){} }, 600);
-      } catch(e) {}
+      if (!currentTrackId) return;
+      if (controller) { try { controller.destroy(); } catch(e){} }
+      controller = null;
+      loadTrack(currentTrackId);
     });
 
     function startCamera() {
@@ -207,6 +205,7 @@
 
     function loadTrack(trackId) {
       pendingTrackId = null;
+      currentTrackId = trackId;
       const mount = document.getElementById("spotify-mount");
       mount.innerHTML = "<div></div>";
       IFrameAPI.createController(
@@ -215,7 +214,6 @@
         (ctrl) => {
           controller = ctrl;
           ctrl.addListener("ready", () => {
-            // Best-effort seek(0) bij ready â soms werkt het, soms niet (smart-resume)
             try { ctrl.seek(0); } catch(e){}
             setTimeout(() => { try { ctrl.seek(0); } catch(e){} }, 500);
           });
