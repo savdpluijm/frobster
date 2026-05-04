@@ -39,25 +39,25 @@
     #player-screen { display: none; flex-direction: column; align-items: center; }
     #player-screen.active { display: flex; }
     #player-frame {
-      width: 320px; max-width: 92vw; height: 80px;
+      width: 360px; max-width: 96vw; height: 80px;
       border-radius: 16px; overflow: hidden;
       background: #1a1a2e;
       box-shadow: 0 0 40px rgba(233,69,96,0.25);
       position: relative;
-      display: flex; align-items: center; justify-content: flex-end;
     }
     #player-frame::before {
       content: "FROBSTER";
       position: absolute; left: 24px; top: 50%; transform: translateY(-50%);
-      font-size: 1.1rem; letter-spacing: 0.18em; color: #e94560; font-weight: 800;
+      font-size: 1.2rem; letter-spacing: 0.18em; color: #e94560; font-weight: 800;
       pointer-events: none; z-index: 1;
     }
-    /* Spotify IFrame API rendert een iframe binnen #spotify-mount; clip-path verbergt track-info */
-    #spotify-mount { width: 320px; height: 80px; flex-shrink: 0; }
+    /* iframe wordt gepositioneerd zodat alleen het rechter play-knop-venster zichtbaar is via clip-path */
+    #spotify-mount { position: absolute; right: 0; top: 0; width: 360px; height: 80px; }
     #spotify-mount iframe {
-      width: 100% !important; height: 100% !important; border: 0;
-      clip-path: inset(0 0 0 240px);
-      -webkit-clip-path: inset(0 0 0 240px);
+      width: 360px !important; height: 80px !important; border: 0;
+      /* clip alleen 70px aan de rechterkant â play-knop sectie */
+      clip-path: inset(0 4px 0 290px);
+      -webkit-clip-path: inset(0 4px 0 290px);
     }
     #msg { margin-top: 1rem; font-size: 0.9rem; color: #888; min-height: 1.2rem; text-align: center; padding: 0 2rem; max-width: 320px; }
     #new-scan-btn {
@@ -188,16 +188,25 @@
         { uri: `spotify:track:${trackId}` },
         (ctrl) => {
           controller = ctrl;
-          // seek(0) bij ready forceert start vanaf het begin (Spotify embed onthoudt anders positie)
-          ctrl.addListener("ready", () => {
+          let seekDone = false;
+          let seekAttempts = 0;
+          const forceStart = () => {
+            seekAttempts++;
             try { ctrl.seek(0); } catch(e) {}
+          };
+          ctrl.addListener("ready", () => {
+            forceStart();
+            // Spotify negeert seek(0) soms bij eerste call â herhaal nog 2x in eerste 2s
+            setTimeout(forceStart, 500);
+            setTimeout(forceStart, 1500);
           });
-          // Backup: bij eerste playback_update ook seek(0) als positie > 1s
-          let didSeek = false;
           ctrl.addListener("playback_update", (e) => {
-            if (!didSeek && e.data.position > 1000) {
-              didSeek = true;
-              try { ctrl.seek(0); } catch(e) {}
+            // Als positie > 2s en we deden < 5 attempts, forceer terug naar 0
+            if (!seekDone && e.data.position > 2000 && seekAttempts < 5) {
+              forceStart();
+            } else if (e.data.position > 0 && e.data.position < 2000) {
+              // Eenmaal afspelend dichtbij 0 â accepteer het
+              seekDone = true;
             }
           });
         }
