@@ -38,7 +38,28 @@
     }
     #player-screen { display: none; flex-direction: column; align-items: center; }
     #player-screen.active { display: flex; }
-    #spotify-frame { width: 320px; max-width: 92vw; height: 352px; border: 0; border-radius: 16px; background: #16213e; box-shadow: 0 0 40px rgba(233,69,96,0.25); }
+    /* Wrap rond iframe; iframe wordt geclipt zodat alleen play-knop zichtbaar is (track-info verborgen) */
+    #player-frame {
+      width: 320px; max-width: 92vw; height: 80px;
+      border-radius: 16px; overflow: hidden;
+      background: #1a1a2e;
+      box-shadow: 0 0 40px rgba(233,69,96,0.25);
+      position: relative;
+      display: flex; align-items: center; justify-content: flex-end;
+    }
+    #player-frame::before {
+      content: "FROBSTER";
+      position: absolute; left: 24px; top: 50%; transform: translateY(-50%);
+      font-size: 1.1rem; letter-spacing: 0.18em; color: #e94560; font-weight: 800;
+      pointer-events: none;
+    }
+    #spotify-frame {
+      width: 320px; height: 80px; border: 0;
+      /* Clip alles links van x=240 weg = album art + track info verborgen, alleen play-knop sectie zichtbaar */
+      clip-path: inset(0 0 0 240px);
+      -webkit-clip-path: inset(0 0 0 240px);
+      flex-shrink: 0;
+    }
     #msg { margin-top: 1rem; font-size: 0.9rem; color: #888; min-height: 1.2rem; text-align: center; padding: 0 2rem; max-width: 320px; }
     #new-scan-btn {
       margin-top: 1.5rem; background: none; border: 1px solid #555;
@@ -64,7 +85,9 @@
   </div>
 
   <div id="player-screen">
-    <iframe id="spotify-frame" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+    <div id="player-frame">
+      <iframe id="spotify-frame" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+    </div>
     <div id="msg"></div>
     <button id="new-scan-btn">Nieuw kaartje scannen</button>
   </div>
@@ -148,7 +171,8 @@
         msgEl.textContent = "Kaart niet gevonden.";
         return;
       }
-      spotifyFrame.src = `https://open.spotify.com/embed/track/${track.track_id}?utm_source=generator`;
+      // t=0 + nonce zorgen ervoor dat het nummer altijd vanaf begin start (geen Spotify "resume")
+      spotifyFrame.src = `https://open.spotify.com/embed/track/${track.track_id}?utm_source=generator&t=0&_=${Date.now()}`;
     }
   </script>
 </body>
