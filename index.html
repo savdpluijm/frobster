@@ -38,7 +38,6 @@
     }
     #player-screen { display: none; flex-direction: column; align-items: center; }
     #player-screen.active { display: flex; }
-    /* Wrap rond iframe; iframe wordt geclipt zodat alleen play-knop zichtbaar is (track-info verborgen) */
     #player-frame {
       width: 320px; max-width: 92vw; height: 80px;
       border-radius: 16px; overflow: hidden;
@@ -51,14 +50,14 @@
       content: "FROBSTER";
       position: absolute; left: 24px; top: 50%; transform: translateY(-50%);
       font-size: 1.1rem; letter-spacing: 0.18em; color: #e94560; font-weight: 800;
-      pointer-events: none;
+      pointer-events: none; z-index: 1;
     }
-    #spotify-frame {
-      width: 320px; height: 80px; border: 0;
-      /* Clip alles links van x=240 weg = album art + track info verborgen, alleen play-knop sectie zichtbaar */
+    /* Spotify IFrame API rendert een iframe binnen #spotify-mount; clip-path verbergt track-info */
+    #spotify-mount { width: 320px; height: 80px; flex-shrink: 0; }
+    #spotify-mount iframe {
+      width: 100% !important; height: 100% !important; border: 0;
       clip-path: inset(0 0 0 240px);
       -webkit-clip-path: inset(0 0 0 240px);
-      flex-shrink: 0;
     }
     #msg { margin-top: 1rem; font-size: 0.9rem; color: #888; min-height: 1.2rem; text-align: center; padding: 0 2rem; max-width: 320px; }
     #new-scan-btn {
@@ -86,13 +85,14 @@
 
   <div id="player-screen">
     <div id="player-frame">
-      <iframe id="spotify-frame" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+      <div id="spotify-mount"></div>
     </div>
     <div id="msg"></div>
     <button id="new-scan-btn">Nieuw kaartje scannen</button>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  <script src="https://open.spotify.com/embed/iframe-api/v1" async></script>
   <script>
     const params = new URLSearchParams(location.search);
     let cardId = params.get("id");
@@ -106,20 +106,25 @@
     const scanLabel     = document.getElementById("scan-label");
     const stopBtn       = document.getElementById("stop-btn");
     const newScanBtn    = document.getElementById("new-scan-btn");
-    const spotifyFrame  = document.getElementById("spotify-frame");
     const msgEl         = document.getElementById("msg");
 
     let stream = null, scanLoop = null, trackData = null;
+    let IFrameAPI = null, controller = null, pendingTrackId = null;
 
     fetch("data.json").then(r => r.json()).then(d => {
       trackData = d;
       if (cardId) startPlayer(cardId);
     });
 
+    window.onSpotifyIframeApiReady = (api) => {
+      IFrameAPI = api;
+      if (pendingTrackId) loadTrack(pendingTrackId);
+    };
+
     scanBtn.addEventListener("click", startCamera);
     stopBtn.addEventListener("click", stopCamera);
     newScanBtn.addEventListener("click", () => {
-      spotifyFrame.src = "";
+      if (controller) { try { controller.pause(); } catch(e){} }
       playerScreen.classList.remove("active");
       scannerScreen.style.display = "flex";
     });
@@ -167,12 +172,36 @@
 
       const track = trackData?.find(t => t.id === id);
       if (!track || !track.track_id) {
-        spotifyFrame.src = "";
         msgEl.textContent = "Kaart niet gevonden.";
         return;
       }
-      // t=0 + nonce zorgen ervoor dat het nummer altijd vanaf begin start (geen Spotify "resume")
-      spotifyFrame.src = `https://open.spotify.com/embed/track/${track.track_id}?utm_source=generator&t=0&_=${Date.now()}`;
+      if (IFrameAPI) loadTrack(track.track_id);
+      else pendingTrackId = track.track_id;
+    }
+
+    function loadTrack(trackId) {
+      pendingTrackId = null;
+      const mount = document.getElementById("spotify-mount");
+      mount.innerHTML = "<div></div>";
+      IFrameAPI.createController(
+        mount.firstElementChild,
+        { uri: `spotify:track:${trackId}` },
+        (ctrl) => {
+          controller = ctrl;
+          // seek(0) bij ready forceert start vanaf het begin (Spotify embed onthoudt anders positie)
+          ctrl.addListener("ready", () => {
+            try { ctrl.seek(0); } catch(e) {}
+          });
+          // Backup: bij eerste playback_update ook seek(0) als positie > 1s
+          let didSeek = false;
+          ctrl.addListener("playback_update", (e) => {
+            if (!didSeek && e.data.position > 1000) {
+              didSeek = true;
+              try { ctrl.seek(0); } catch(e) {}
+            }
+          });
+        }
+      );
     }
   </script>
 </body>
