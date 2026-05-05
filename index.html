@@ -631,6 +631,24 @@
         else pendingIframeTrack = currentTrack.track_id;
       }
     });
+
+    // Wake Lock: telefoon-scherm wakker houden tijdens het spel.
+    let wakeLock = null;
+    async function acquireWakeLock() {
+      try {
+        if ("wakeLock" in navigator && document.visibilityState === "visible") {
+          wakeLock = await navigator.wakeLock.request("screen");
+          wakeLock.addEventListener("release", () => { wakeLock = null; });
+        }
+      } catch (_) { /* niet beschikbaar of geweigerd */ }
+    }
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible" && !wakeLock) acquireWakeLock();
+    });
+    ["click", "touchend"].forEach(evt =>
+      document.addEventListener(evt, () => { if (!wakeLock) acquireWakeLock(); }, { passive: true })
+    );
+    acquireWakeLock();
   </script>
 </body>
 </html>
