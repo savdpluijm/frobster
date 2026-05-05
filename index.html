@@ -21,10 +21,19 @@
     }
     #bg-art {
       position: fixed; inset: 0;
-      width: 100%; height: 100%;
       z-index: -1; pointer-events: none;
-      opacity: 0.55;
+      overflow: hidden;
     }
+    #bg-art > i {
+      position: absolute;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      opacity: 0.7;
+      display: block;
+    }
+    #bg-art .vinyl { background-image: url("img/vinyl.png"); aspect-ratio: 1; }
+    #bg-art .yarn  { background-image: url("img/yarn.png"); aspect-ratio: 1.026; }
     h1 {
       font-family: 'Monoton', cursive;
       font-size: 3rem; letter-spacing: 0.08em; margin-bottom: 2rem;
@@ -72,7 +81,7 @@
 
     /* Player — vinyl mystery card */
     #mystery {
-      width: 100%; padding: 1.8rem 1.5rem;
+      width: 240px; max-width: 80%; padding: 1.4rem 1.2rem;
       border-radius: 16px;
       background:
         radial-gradient(circle at center, rgba(77,208,225,0.06) 0%, transparent 60%),
@@ -169,66 +178,15 @@
   </style>
 </head>
 <body>
-  <svg id="bg-art" aria-hidden="true" preserveAspectRatio="xMidYMid slice" viewBox="0 0 400 800">
-    <g transform="translate(40,110)">
-      <circle r="68" fill="#ff5e98"/>
-      <circle r="54" fill="none" stroke="rgba(255,255,255,0.28)" stroke-width="0.8"/>
-      <circle r="42" fill="none" stroke="rgba(255,255,255,0.28)" stroke-width="0.8"/>
-      <circle r="30" fill="none" stroke="rgba(255,255,255,0.28)" stroke-width="0.8"/>
-      <circle r="14" fill="#ffe1ec"/>
-      <circle r="2.5" fill="#1a1a2e"/>
-    </g>
-    <g transform="translate(355,80)">
-      <circle r="56" fill="#ffd54f"/>
-      <ellipse rx="52" ry="14" transform="rotate(15)" fill="none" stroke="rgba(0,0,0,0.22)" stroke-width="1.6"/>
-      <ellipse rx="52" ry="14" transform="rotate(-25)" fill="none" stroke="rgba(0,0,0,0.22)" stroke-width="1.6"/>
-      <ellipse rx="52" ry="14" transform="rotate(55)" fill="none" stroke="rgba(0,0,0,0.22)" stroke-width="1.6"/>
-      <ellipse rx="52" ry="14" transform="rotate(-60)" fill="none" stroke="rgba(0,0,0,0.22)" stroke-width="1.6"/>
-    </g>
-    <g transform="translate(210,30)">
-      <circle r="34" fill="#9c64ff"/>
-      <circle r="26" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.7"/>
-      <circle r="18" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.7"/>
-      <circle r="8" fill="#fff"/>
-      <circle r="2" fill="#1a1a2e"/>
-    </g>
-    <g transform="translate(395,340)">
-      <circle r="72" fill="#4dd0e1"/>
-      <circle r="58" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.8"/>
-      <circle r="44" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.8"/>
-      <circle r="30" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.8"/>
-      <circle r="14" fill="#fff"/>
-      <circle r="3" fill="#1a1a2e"/>
-    </g>
-    <g transform="translate(15,400)">
-      <circle r="50" fill="#9c64ff"/>
-      <ellipse rx="46" ry="13" transform="rotate(20)" fill="none" stroke="rgba(0,0,0,0.22)" stroke-width="1.5"/>
-      <ellipse rx="46" ry="13" transform="rotate(-30)" fill="none" stroke="rgba(0,0,0,0.22)" stroke-width="1.5"/>
-      <ellipse rx="46" ry="13" transform="rotate(70)" fill="none" stroke="rgba(0,0,0,0.22)" stroke-width="1.5"/>
-    </g>
-    <g transform="translate(370,580)">
-      <circle r="44" fill="#ff5e98"/>
-      <ellipse rx="40" ry="11" transform="rotate(25)" fill="none" stroke="rgba(0,0,0,0.22)" stroke-width="1.4"/>
-      <ellipse rx="40" ry="11" transform="rotate(-35)" fill="none" stroke="rgba(0,0,0,0.22)" stroke-width="1.4"/>
-      <ellipse rx="40" ry="11" transform="rotate(80)" fill="none" stroke="rgba(0,0,0,0.22)" stroke-width="1.4"/>
-    </g>
-    <g transform="translate(60,720)">
-      <circle r="62" fill="#ff9a5a"/>
-      <circle r="50" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.8"/>
-      <circle r="38" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.8"/>
-      <circle r="26" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.8"/>
-      <circle r="12" fill="#fff"/>
-      <circle r="3" fill="#1a1a2e"/>
-    </g>
-    <g transform="translate(370,755)">
-      <circle r="60" fill="#4caf50"/>
-      <circle r="48" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.8"/>
-      <circle r="36" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.8"/>
-      <circle r="24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.8"/>
-      <circle r="12" fill="#fff"/>
-      <circle r="3" fill="#1a1a2e"/>
-    </g>
-  </svg>
+  <div id="bg-art" aria-hidden="true">
+    <i class="vinyl" style="top:-3%; left:-12%; width:42vw; max-width:200px; transform:rotate(-12deg);"></i>
+    <i class="yarn"  style="top:1%; right:-10%; width:38vw; max-width:180px; filter:hue-rotate(60deg) saturate(1.1);"></i>
+    <i class="vinyl" style="top:34%; right:-18%; width:50vw; max-width:230px; transform:rotate(15deg); filter:hue-rotate(180deg) saturate(0.9);"></i>
+    <i class="yarn"  style="top:42%; left:-14%; width:36vw; max-width:170px; filter:hue-rotate(220deg) saturate(0.85);"></i>
+    <i class="yarn"  style="bottom:8%; right:-12%; width:38vw; max-width:180px; filter:hue-rotate(-30deg) saturate(0.95);"></i>
+    <i class="vinyl" style="bottom:-4%; left:-10%; width:45vw; max-width:210px; transform:rotate(8deg); filter:hue-rotate(-50deg) saturate(0.7);"></i>
+    <i class="vinyl" style="bottom:14%; right:8%; width:24vw; max-width:120px; transform:rotate(-20deg); filter:hue-rotate(110deg) saturate(0.75);"></i>
+  </div>
 
   <div class="topbar">
     <button id="logout-btn" style="display:none">uitloggen</button>
