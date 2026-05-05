@@ -58,19 +58,29 @@
     const path = deviceId
       ? `/me/player/play?device_id=${encodeURIComponent(deviceId)}`
       : `/me/player/play`;
-    try {
-      await authedFetch(path, { method: "PUT", body });
-    } catch (e) {
-      // Spotify Connect device in slaapstand: wek het met een transfer-call
-      // en probeer dan opnieuw. Dekt 404 (NO_ACTIVE_DEVICE) en 403.
-      if ((e.status === 404 || e.status === 403) && deviceId) {
-        try { await transferPlayback(deviceId, false); } catch (_) {}
-        await new Promise(r => setTimeout(r, 700));
+
+    // Forceer het apparaat als actief voordat we play sturen.
+    if (deviceId) {
+      try { await transferPlayback(deviceId, false); } catch (_) {}
+    }
+
+    // Tot 3 pogingen. Bij de 2e retry transfer met play:true; dat wekt
+    // soms een hardnekkig slapend apparaat dat play:false negeert.
+    let lastErr;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
         await authedFetch(path, { method: "PUT", body });
-      } else {
-        throw e;
+        return;
+      } catch (e) {
+        lastErr = e;
+        const recoverable = (e.status === 404 || e.status === 403) && deviceId;
+        if (!recoverable) throw e;
+        if (attempt === 2) break;
+        try { await transferPlayback(deviceId, attempt === 1); } catch (_) {}
+        await new Promise(r => setTimeout(r, 700 + attempt * 800));
       }
     }
+    throw lastErr;
   }
 
   async function pause() {
