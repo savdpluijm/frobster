@@ -126,6 +126,7 @@
     let stream = null, scanLoop = null, trackData = null;
     let IFrameAPI = null, controller = null, pendingTrackId = null;
     let currentTrackId = null;
+    let autoPlayOnReady = false;
 
     fetch("data.json").then(r => r.json()).then(d => {
       trackData = d;
@@ -146,10 +147,12 @@
     });
 
     // Restart-knop: gooi iframe weg en mount 'm opnieuw â omzeilt Spotify's smart-resume cache
+    // Probeert ook auto-play (user-gesture flag staat aan door de tap)
     restartBtn.addEventListener("click", () => {
       if (!currentTrackId) return;
       if (controller) { try { controller.destroy(); } catch(e){} }
       controller = null;
+      autoPlayOnReady = true;
       loadTrack(currentTrackId);
     });
 
@@ -216,6 +219,14 @@
           ctrl.addListener("ready", () => {
             try { ctrl.seek(0); } catch(e){}
             setTimeout(() => { try { ctrl.seek(0); } catch(e){} }, 500);
+            if (autoPlayOnReady) {
+              autoPlayOnReady = false;
+              // Spotify-iframe kan kort na ready nog niet klaar zijn â meerdere pogingen
+              const tryPlay = () => { try { ctrl.seek(0); ctrl.play(); } catch(e){} };
+              setTimeout(tryPlay, 100);
+              setTimeout(tryPlay, 400);
+              setTimeout(tryPlay, 900);
+            }
           });
         }
       );
