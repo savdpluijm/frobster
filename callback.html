@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Frobster â Inloggen</title>
+  <style>
+    body {
+      background: #1a1a2e; color: #fff;
+      font-family: -apple-system, sans-serif;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      min-height: 100vh; margin: 0; padding: 1rem;
+      text-align: center;
+    }
+    h1 { color: #e94560; letter-spacing: 0.18em; font-weight: 800; margin-bottom: 1rem; }
+    p { color: #aaa; max-width: 320px; }
+    .err { color: #e94560; }
+  </style>
+</head>
+<body>
+  <h1>FROBSTER</h1>
+  <p id="msg">Bezig met inloggenâ¦</p>
+  <script src="auth.js"></script>
+  <script>
+    (async () => {
+      const msgEl = document.getElementById("msg");
+      const params = new URLSearchParams(location.search);
+      const code = params.get("code");
+      const error = params.get("error");
+
+      if (error) {
+        msgEl.innerHTML = `<span class="err">Login geannuleerd of mislukt: ${error}</span>`;
+        return;
+      }
+      if (!code) {
+        msgEl.innerHTML = `<span class="err">Geen authorization code ontvangen.</span>`;
+        return;
+      }
+
+      try {
+        await FrobsterAuth.exchangeCodeForToken(code);
+        const pendingCardId = sessionStorage.getItem("frobster_pending_card_id");
+        sessionStorage.removeItem("frobster_pending_card_id");
+        const target = pendingCardId
+          ? `index.html?id=${encodeURIComponent(pendingCardId)}`
+          : `index.html`;
+        location.replace(target);
+      } catch (e) {
+        msgEl.innerHTML = `<span class="err">Inloggen mislukt: ${e.message}</span>`;
+      }
+    })();
+  </script>
+</body>
+</html>
