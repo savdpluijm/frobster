@@ -179,13 +179,35 @@
 </head>
 <body>
   <div id="bg-art" aria-hidden="true">
-    <i class="vinyl" style="top:-3%; left:-12%; width:42vw; max-width:200px; transform:rotate(-12deg);"></i>
-    <i class="yarn"  style="top:1%; right:-10%; width:38vw; max-width:180px; filter:hue-rotate(60deg) saturate(1.1);"></i>
-    <i class="vinyl" style="top:34%; right:-18%; width:50vw; max-width:230px; transform:rotate(15deg); filter:hue-rotate(180deg) saturate(0.9);"></i>
-    <i class="yarn"  style="top:42%; left:-14%; width:36vw; max-width:170px; filter:hue-rotate(220deg) saturate(0.85);"></i>
-    <i class="yarn"  style="bottom:8%; right:-12%; width:38vw; max-width:180px; filter:hue-rotate(-30deg) saturate(0.95);"></i>
-    <i class="vinyl" style="bottom:-4%; left:-10%; width:45vw; max-width:210px; transform:rotate(8deg); filter:hue-rotate(-50deg) saturate(0.7);"></i>
-    <i class="vinyl" style="bottom:14%; right:8%; width:24vw; max-width:120px; transform:rotate(-20deg); filter:hue-rotate(110deg) saturate(0.75);"></i>
+    <!-- BOVENRAND -->
+    <i class="vinyl" style="top:-4%;  left:-10%;  width:34vw; max-width:170px; transform:rotate(-12deg);"></i>
+    <i class="yarn"  style="top:-2%;  left:18%;   width:22vw; max-width:110px; filter:hue-rotate(60deg) saturate(1.1);"></i>
+    <i class="vinyl" style="top:-6%;  left:38%;   width:18vw; max-width:90px;  transform:rotate(20deg); filter:hue-rotate(120deg) saturate(0.85);"></i>
+    <i class="yarn"  style="top:-3%;  left:55%;   width:24vw; max-width:120px; filter:hue-rotate(220deg) saturate(0.9);"></i>
+    <i class="vinyl" style="top:-5%;  right:8%;   width:22vw; max-width:110px; transform:rotate(-8deg); filter:hue-rotate(40deg) saturate(0.9);"></i>
+    <i class="yarn"  style="top:-4%;  right:-8%;  width:30vw; max-width:150px; filter:hue-rotate(-30deg) saturate(0.95);"></i>
+
+    <!-- LINKERRAND -->
+    <i class="vinyl" style="top:18%;  left:-14%;  width:30vw; max-width:160px; transform:rotate(18deg); filter:hue-rotate(180deg) saturate(0.85);"></i>
+    <i class="yarn"  style="top:32%;  left:-10%;  width:24vw; max-width:120px; filter:hue-rotate(280deg) saturate(0.85);"></i>
+    <i class="vinyl" style="top:48%;  left:-16%;  width:34vw; max-width:180px; transform:rotate(-15deg); filter:hue-rotate(80deg) saturate(0.9);"></i>
+    <i class="yarn"  style="top:64%;  left:-8%;   width:22vw; max-width:110px; filter:hue-rotate(160deg) saturate(0.9);"></i>
+    <i class="vinyl" style="top:78%;  left:-12%;  width:28vw; max-width:140px; transform:rotate(10deg); filter:hue-rotate(-60deg) saturate(0.8);"></i>
+
+    <!-- RECHTERRAND -->
+    <i class="yarn"  style="top:14%;  right:-12%; width:26vw; max-width:130px; filter:hue-rotate(20deg) saturate(1.05);"></i>
+    <i class="vinyl" style="top:28%;  right:-14%; width:32vw; max-width:170px; transform:rotate(22deg); filter:hue-rotate(260deg) saturate(0.85);"></i>
+    <i class="yarn"  style="top:46%;  right:-10%; width:24vw; max-width:120px; filter:hue-rotate(-90deg) saturate(0.9);"></i>
+    <i class="vinyl" style="top:60%;  right:-16%; width:36vw; max-width:190px; transform:rotate(-18deg); filter:hue-rotate(140deg) saturate(0.8);"></i>
+    <i class="yarn"  style="top:76%;  right:-8%;  width:22vw; max-width:110px; filter:hue-rotate(330deg) saturate(0.95);"></i>
+
+    <!-- ONDERRAND -->
+    <i class="vinyl" style="bottom:-5%; left:-8%;  width:32vw; max-width:170px; transform:rotate(8deg); filter:hue-rotate(-50deg) saturate(0.75);"></i>
+    <i class="yarn"  style="bottom:-3%; left:15%;  width:24vw; max-width:120px; filter:hue-rotate(0deg) saturate(1.0);"></i>
+    <i class="vinyl" style="bottom:-6%; left:35%;  width:22vw; max-width:110px; transform:rotate(-22deg); filter:hue-rotate(200deg) saturate(0.85);"></i>
+    <i class="yarn"  style="bottom:-2%; left:55%;  width:20vw; max-width:100px; filter:hue-rotate(120deg) saturate(0.9);"></i>
+    <i class="vinyl" style="bottom:-5%; right:18%; width:26vw; max-width:130px; transform:rotate(15deg); filter:hue-rotate(70deg) saturate(0.8);"></i>
+    <i class="yarn"  style="bottom:-4%; right:-8%; width:28vw; max-width:140px; filter:hue-rotate(-100deg) saturate(0.85);"></i>
   </div>
 
   <div class="topbar">
@@ -261,7 +283,8 @@
 
     <button class="btn cyan" id="new-scan-btn" style="margin-top:1.8rem">Nieuw kaartje scannen</button>
 
-    <div id="reveal">
+    <!-- Reveal verborgen: antwoord staat op het kaartje. JS-refs blijven om scripts intact te houden. -->
+    <div id="reveal" style="display:none">
       <button class="btn" id="reveal-btn">Onthul antwoord</button>
       <div id="reveal-content">
         <div class="song" id="reveal-song"></div>
