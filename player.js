@@ -1,6 +1,6 @@
 // Spotify Web API wrapper voor Frobster.
 // Werkt via Spotify Connect: stuurt commando's naar het actieve apparaat
-// (typisch: Spotify-app op telefoon â gekoppelde Bluetooth/Connect-speaker).
+// (typisch: Spotify-app op telefoon -> gekoppelde Bluetooth/Connect-speaker).
 
 (function() {
   const API = "https://api.spotify.com/v1";
@@ -51,22 +51,32 @@
   }
 
   async function playTrack(trackId, deviceId, positionMs = 0) {
+    const body = JSON.stringify({
+      uris: [`spotify:track:${trackId}`],
+      position_ms: positionMs
+    });
     const path = deviceId
       ? `/me/player/play?device_id=${encodeURIComponent(deviceId)}`
       : `/me/player/play`;
-    await authedFetch(path, {
-      method: "PUT",
-      body: JSON.stringify({
-        uris: [`spotify:track:${trackId}`],
-        position_ms: positionMs
-      })
-    });
+    try {
+      await authedFetch(path, { method: "PUT", body });
+    } catch (e) {
+      // Spotify Connect device in slaapstand: wek het met een transfer-call
+      // en probeer dan opnieuw. Dekt 404 (NO_ACTIVE_DEVICE) en 403.
+      if ((e.status === 404 || e.status === 403) && deviceId) {
+        try { await transferPlayback(deviceId, false); } catch (_) {}
+        await new Promise(r => setTimeout(r, 700));
+        await authedFetch(path, { method: "PUT", body });
+      } else {
+        throw e;
+      }
+    }
   }
 
   async function pause() {
     try { await authedFetch("/me/player/pause", { method: "PUT" }); }
     catch (e) {
-      // 403 bij niet-actief device â niet fataal
+      // 403 bij niet-actief device -- niet fataal
       if (e.status !== 403 && e.status !== 404) throw e;
     }
   }
