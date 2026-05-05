@@ -59,13 +59,8 @@
       ? `/me/player/play?device_id=${encodeURIComponent(deviceId)}`
       : `/me/player/play`;
 
-    // Forceer het apparaat als actief voordat we play sturen.
-    if (deviceId) {
-      try { await transferPlayback(deviceId, false); } catch (_) {}
-    }
-
-    // Tot 3 pogingen. Bij de 2e retry transfer met play:true; dat wekt
-    // soms een hardnekkig slapend apparaat dat play:false negeert.
+    // Eerste poging: directe play zonder pre-transfer (sneller bij wakker device).
+    // Bij 404/403 (slapend apparaat) doen we transfer + wachten + retry tot 3x.
     let lastErr;
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
@@ -76,6 +71,8 @@
         const recoverable = (e.status === 404 || e.status === 403) && deviceId;
         if (!recoverable) throw e;
         if (attempt === 2) break;
+        // Bij 2e retry transfer met play:true; dat wekt een hardnekkig slapend
+        // apparaat dat play:false negeert.
         try { await transferPlayback(deviceId, attempt === 1); } catch (_) {}
         await new Promise(r => setTimeout(r, 700 + attempt * 800));
       }
