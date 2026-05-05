@@ -13,9 +13,14 @@
       align-items: center; justify-content: center;
       min-height: 100vh; user-select: none;
       -webkit-tap-highlight-color: transparent;
+      padding: 1rem;
     }
-    h1 { font-size: 2.2rem; letter-spacing: 0.18em; margin-bottom: 2.5rem; color: #e94560; font-weight: 800; }
-    #scanner-screen { display: flex; flex-direction: column; align-items: center; }
+    h1 { font-size: 2.2rem; letter-spacing: 0.18em; margin-bottom: 2rem; color: #e94560; font-weight: 800; }
+
+    .screen { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 360px; }
+    .screen.active { display: flex; }
+
+    /* Scanner */
     #scan-btn {
       width: 130px; height: 130px; border-radius: 50%;
       background: #e94560; border: none; cursor: pointer;
@@ -31,56 +36,75 @@
     #video { width: 280px; height: 280px; border-radius: 16px; object-fit: cover; border: 3px solid #e94560; }
     #canvas { display: none; }
     #scan-hint { margin-top: 1rem; font-size: 0.9rem; color: #888; }
-    #stop-btn {
-      margin-top: 1.2rem; background: none; border: 1px solid #555;
-      color: #aaa; padding: 0.5rem 1.5rem; border-radius: 999px;
-      cursor: pointer; font-size: 0.9rem;
+
+    /* Player */
+    #mystery {
+      width: 100%; padding: 1.5rem;
+      border-radius: 16px;
+      background: #16213e; border: 1px solid #2a3a5a;
+      text-align: center;
+      box-shadow: 0 0 40px rgba(233,69,96,0.15);
     }
-    #player-screen { display: none; flex-direction: column; align-items: center; }
-    #player-screen.active { display: flex; }
-    #player-frame {
-      width: 360px; max-width: 96vw; height: 80px;
-      border-radius: 16px; overflow: hidden;
-      background: #1a1a2e;
-      box-shadow: 0 0 40px rgba(233,69,96,0.25);
-      position: relative;
-    }
-    #player-frame::before {
-      content: "FROBSTER";
-      position: absolute; left: 24px; top: 50%; transform: translateY(-50%);
-      font-size: 1.2rem; letter-spacing: 0.18em; color: #e94560; font-weight: 800;
-      pointer-events: none; z-index: 1;
-    }
-    /* iframe wordt gepositioneerd zodat alleen het rechter play-knop-venster zichtbaar is via clip-path */
-    #spotify-mount { position: absolute; right: 0; top: 0; width: 360px; height: 80px; }
-    #spotify-mount iframe {
-      width: 360px !important; height: 80px !important; border: 0;
-      /* clip alleen 70px aan de rechterkant â play-knop sectie */
-      clip-path: inset(0 4px 0 290px);
-      -webkit-clip-path: inset(0 4px 0 290px);
-    }
-    #restart-btn {
-      margin-top: 1.2rem; background: #e94560; border: none;
-      color: #fff; padding: 0.7rem 1.6rem; border-radius: 999px;
+    #mystery .secret { font-size: 1.6rem; letter-spacing: 0.3em; color: #e94560; font-weight: 800; }
+    #mystery .status { margin-top: 0.5rem; font-size: 0.85rem; color: #aaa; }
+
+    .controls { display: flex; gap: 0.8rem; margin-top: 1.5rem; }
+    .btn {
+      background: #e94560; border: none; color: #fff;
+      padding: 0.9rem 1.4rem; border-radius: 999px;
       cursor: pointer; font-size: 0.95rem; font-weight: 600;
       box-shadow: 0 0 20px rgba(233,69,96,0.35);
       touch-action: manipulation;
-      display: flex; align-items: center; gap: 0.5rem;
+      display: flex; align-items: center; gap: 0.4rem;
     }
-    #restart-btn:active { transform: scale(0.96); }
-    #restart-btn svg { width: 18px; height: 18px; fill: #fff; }
-    #msg { margin-top: 1rem; font-size: 0.9rem; color: #888; min-height: 1.2rem; text-align: center; padding: 0 2rem; max-width: 320px; }
-    #new-scan-btn {
-      margin-top: 1.5rem; background: none; border: 1px solid #555;
-      color: #aaa; padding: 0.5rem 1.5rem; border-radius: 999px;
-      cursor: pointer; font-size: 0.9rem;
+    .btn:active { transform: scale(0.96); }
+    .btn svg { width: 18px; height: 18px; fill: #fff; }
+    .btn.secondary {
+      background: transparent; border: 1px solid #555;
+      color: #aaa; box-shadow: none;
+    }
+    .btn.green { background: #1DB954; box-shadow: 0 0 20px rgba(29,185,84,0.35); }
+
+    #device-info { margin-top: 1.2rem; font-size: 0.85rem; color: #888; text-align: center; }
+    #device-info .name { color: #ccc; }
+
+    #reveal {
+      margin-top: 1.5rem; padding-top: 1.5rem;
+      border-top: 1px solid #2a3a5a;
+      width: 100%; text-align: center;
+    }
+    #reveal-content { display: none; }
+    #reveal-content.shown { display: block; }
+    #reveal-content .song { font-size: 1.3rem; font-weight: 700; color: #fff; }
+    #reveal-content .artist { font-size: 1rem; color: #aaa; margin-top: 0.3rem; }
+    #reveal-content .year { font-size: 2.2rem; font-weight: 800; color: #e94560; margin-top: 0.7rem; }
+
+    /* Login + setup */
+    .panel {
+      width: 100%; padding: 1.5rem;
+      border-radius: 16px; background: #16213e; border: 1px solid #2a3a5a;
+      text-align: center;
+    }
+    .panel p { color: #aaa; margin-bottom: 1rem; font-size: 0.95rem; line-height: 1.4; }
+
+    #msg { margin-top: 1rem; font-size: 0.9rem; color: #888; min-height: 1.2rem; text-align: center; max-width: 320px; }
+
+    .topbar { position: fixed; top: 0.7rem; right: 0.7rem; z-index: 10; }
+    .topbar button {
+      background: transparent; border: none; color: #555;
+      font-size: 0.75rem; cursor: pointer; padding: 0.3rem 0.6rem;
     }
   </style>
 </head>
 <body>
+  <div class="topbar">
+    <button id="logout-btn" style="display:none">uitloggen</button>
+  </div>
+
   <h1>FROBSTER</h1>
 
-  <div id="scanner-screen">
+  <!-- Scanner -->
+  <div id="scanner-screen" class="screen active">
     <button id="scan-btn" aria-label="Scan kaartje">
       <svg viewBox="0 0 24 24"><path d="M9.5 6.5v3h-3v-3h3M11 5H5v6h6V5zm-1.5 9.5v3h-3v-3h3M11 13H5v6h6v-6zm6.5-6.5v3h-3v-3h3M19 5h-6v6h6V5zm-6 8h1.5v1.5H13V13zm1.5 1.5H16V16h-1.5v-1.5zM16 13h1.5v1.5H16V13zm-3 3h1.5v1.5H13V16zm1.5 1.5H16V19h-1.5v-1.5zM16 16h1.5v1.5H16V16zm1.5-1.5H19V16h-1.5v-1.5zm0 3H19V19h-1.5v-1.5zM22 7h-2V4h-3V2h5v5zm0 15v-5h-2v3h-3v2h5zM2 22h5v-2H4v-3H2v5zM2 2v5h2V4h3V2H2z"/></svg>
     </button>
@@ -89,72 +113,180 @@
       <video id="video" playsinline autoplay muted></video>
       <canvas id="canvas"></canvas>
       <p id="scan-hint">Richt de camera op de QR-code</p>
-      <button id="stop-btn">Annuleren</button>
+      <button class="btn secondary" id="stop-btn" style="margin-top:1rem">Annuleren</button>
     </div>
   </div>
 
-  <div id="player-screen">
-    <div id="player-frame">
-      <div id="spotify-mount"></div>
+  <!-- Login screen -->
+  <div id="login-screen" class="screen">
+    <div class="panel">
+      <p>Log eenmalig in met Spotify Premium om hele nummers vanaf het begin af te kunnen spelen.</p>
+      <button class="btn green" id="login-btn">Inloggen met Spotify</button>
     </div>
-    <button id="restart-btn" aria-label="Start vanaf het begin">
-      <svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
-      Start vanaf begin
-    </button>
-    <div id="msg"></div>
-    <button id="new-scan-btn">Nieuw kaartje scannen</button>
   </div>
+
+  <!-- Geen actief device -->
+  <div id="no-device-screen" class="screen">
+    <div class="panel">
+      <p><strong>Geen actief Spotify-apparaat gevonden.</strong></p>
+      <p>Open de Spotify-app op je telefoon, koppel hem met je speaker (Bluetooth of Spotify Connect), en speel kort iets af. Druk dan op Probeer opnieuw.</p>
+      <button class="btn" id="retry-device-btn">Probeer opnieuw</button>
+    </div>
+  </div>
+
+  <!-- Geen Premium -->
+  <div id="no-premium-screen" class="screen">
+    <div class="panel">
+      <p><strong>Geen Spotify Premium gevonden.</strong></p>
+      <p>Volledige nummers vereisen Premium. Je kunt nog wel doorgaan met 30s-previews.</p>
+      <button class="btn" id="continue-preview-btn">Doorgaan met previews</button>
+      <button class="btn secondary" id="logout-from-no-premium" style="margin-top:0.6rem">Uitloggen</button>
+    </div>
+  </div>
+
+  <!-- Player -->
+  <div id="player-screen" class="screen">
+    <div id="mystery">
+      <div class="secret">? ? ? ? ?</div>
+      <div class="status" id="player-status">Bezig met ladenâ¦</div>
+    </div>
+    <div class="controls">
+      <button class="btn" id="pause-btn" aria-label="Pauze">
+        <svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+        Pauze
+      </button>
+      <button class="btn" id="restart-btn" aria-label="Begin">
+        <svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+        Begin
+      </button>
+    </div>
+    <div id="device-info">
+      Speelt op: <span class="name" id="device-name">â¦</span>
+      <button class="btn secondary" id="switch-device-btn" style="margin-top:0.6rem; font-size:0.8rem; padding:0.3rem 0.9rem">Wissel apparaat</button>
+    </div>
+
+    <div id="reveal">
+      <button class="btn" id="reveal-btn">Onthul antwoord</button>
+      <div id="reveal-content">
+        <div class="song" id="reveal-song"></div>
+        <div class="artist" id="reveal-artist"></div>
+        <div class="year" id="reveal-year"></div>
+      </div>
+    </div>
+
+    <button class="btn secondary" id="new-scan-btn" style="margin-top:1.5rem">Nieuw kaartje scannen</button>
+  </div>
+
+  <!-- Iframe fallback voor non-Premium -->
+  <div id="iframe-screen" class="screen">
+    <div id="iframe-frame" style="width:360px;max-width:96vw;height:80px;border-radius:16px;overflow:hidden;background:#1a1a2e;box-shadow:0 0 40px rgba(233,69,96,0.25);position:relative;">
+      <div style="content:'FROBSTER';position:absolute;left:24px;top:50%;transform:translateY(-50%);font-size:1.2rem;letter-spacing:0.18em;color:#e94560;font-weight:800;pointer-events:none;z-index:1;">FROBSTER</div>
+      <div id="iframe-mount" style="position:absolute;right:0;top:0;width:360px;height:80px;"></div>
+    </div>
+    <div id="iframe-msg" style="margin-top:1rem;font-size:0.85rem;color:#888;text-align:center;max-width:320px">
+      30s-preview modus. Tik op Spotify's play-knop hierboven.
+    </div>
+    <button class="btn secondary" id="iframe-new-scan-btn" style="margin-top:1.5rem">Nieuw kaartje scannen</button>
+  </div>
+
+  <div id="msg"></div>
+
+  <style>
+    #iframe-mount iframe {
+      width: 360px !important; height: 80px !important; border: 0;
+      clip-path: inset(0 4px 0 290px);
+      -webkit-clip-path: inset(0 4px 0 290px);
+    }
+  </style>
 
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
-  <script src="https://open.spotify.com/embed/iframe-api/v1" async></script>
+  <script src="auth.js"></script>
+  <script src="player.js"></script>
   <script>
     const params = new URLSearchParams(location.search);
     let cardId = params.get("id");
 
-    const scannerScreen = document.getElementById("scanner-screen");
-    const playerScreen  = document.getElementById("player-screen");
-    const cameraWrap    = document.getElementById("camera-wrap");
-    const video         = document.getElementById("video");
-    const canvas        = document.getElementById("canvas");
-    const scanBtn       = document.getElementById("scan-btn");
-    const scanLabel     = document.getElementById("scan-label");
-    const stopBtn       = document.getElementById("stop-btn");
-    const newScanBtn    = document.getElementById("new-scan-btn");
-    const restartBtn    = document.getElementById("restart-btn");
-    const msgEl         = document.getElementById("msg");
+    let trackData = null;
+    let currentTrack = null;
+    let currentDevice = null;
+    let isPaused = false;
 
-    let stream = null, scanLoop = null, trackData = null;
-    let IFrameAPI = null, controller = null, pendingTrackId = null;
-    let currentTrackId = null;
-    let autoPlayOnReady = false;
+    let stream = null, scanLoop = null;
 
+    // DOM
+    const screens = {
+      scanner: document.getElementById("scanner-screen"),
+      login: document.getElementById("login-screen"),
+      noDevice: document.getElementById("no-device-screen"),
+      noPremium: document.getElementById("no-premium-screen"),
+      player: document.getElementById("player-screen"),
+      iframe: document.getElementById("iframe-screen")
+    };
+    const cameraWrap = document.getElementById("camera-wrap");
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const scanBtn = document.getElementById("scan-btn");
+    const scanLabel = document.getElementById("scan-label");
+    const stopBtn = document.getElementById("stop-btn");
+    const newScanBtn = document.getElementById("new-scan-btn");
+    const iframeNewScanBtn = document.getElementById("iframe-new-scan-btn");
+    const msgEl = document.getElementById("msg");
+    const playerStatus = document.getElementById("player-status");
+    const pauseBtn = document.getElementById("pause-btn");
+    const restartBtn = document.getElementById("restart-btn");
+    const deviceName = document.getElementById("device-name");
+    const switchDeviceBtn = document.getElementById("switch-device-btn");
+    const revealBtn = document.getElementById("reveal-btn");
+    const revealContent = document.getElementById("reveal-content");
+    const revealSong = document.getElementById("reveal-song");
+    const revealArtist = document.getElementById("reveal-artist");
+    const revealYear = document.getElementById("reveal-year");
+    const loginBtn = document.getElementById("login-btn");
+    const logoutBtn = document.getElementById("logout-btn");
+    const retryDeviceBtn = document.getElementById("retry-device-btn");
+    const continuePreviewBtn = document.getElementById("continue-preview-btn");
+    const logoutFromNoPremium = document.getElementById("logout-from-no-premium");
+
+    function showScreen(name) {
+      Object.values(screens).forEach(s => s.classList.remove("active"));
+      screens[name].classList.add("active");
+    }
+
+    function setMsg(text, isError = false) {
+      msgEl.textContent = text;
+      msgEl.style.color = isError ? "#e94560" : "#888";
+    }
+
+    // Init
     fetch("data.json").then(r => r.json()).then(d => {
       trackData = d;
-      if (cardId) startPlayer(cardId);
+      if (FrobsterAuth.isLoggedIn()) {
+        logoutBtn.style.display = "";
+      }
+      if (cardId) {
+        startWithCard(cardId);
+      }
     });
 
-    window.onSpotifyIframeApiReady = (api) => {
-      IFrameAPI = api;
-      if (pendingTrackId) loadTrack(pendingTrackId);
-    };
-
+    // Scanner
     scanBtn.addEventListener("click", startCamera);
     stopBtn.addEventListener("click", stopCamera);
-    newScanBtn.addEventListener("click", () => {
-      if (controller) { try { controller.pause(); } catch(e){} }
-      playerScreen.classList.remove("active");
-      scannerScreen.style.display = "flex";
-    });
+    newScanBtn.addEventListener("click", goToScanner);
+    iframeNewScanBtn.addEventListener("click", goToScanner);
 
-    // Restart-knop: gooi iframe weg en mount 'm opnieuw â omzeilt Spotify's smart-resume cache
-    // Probeert ook auto-play (user-gesture flag staat aan door de tap)
-    restartBtn.addEventListener("click", () => {
-      if (!currentTrackId) return;
-      if (controller) { try { controller.destroy(); } catch(e){} }
-      controller = null;
-      autoPlayOnReady = true;
-      loadTrack(currentTrackId);
-    });
+    function goToScanner() {
+      // Pauzeer evt. afspelen
+      if (FrobsterAuth.isLoggedIn()) {
+        FrobsterPlayer.pause().catch(() => {});
+      }
+      // Iframe opruimen
+      const mount = document.getElementById("iframe-mount");
+      if (mount) mount.innerHTML = "";
+      revealContent.classList.remove("shown");
+      revealBtn.style.display = "";
+      showScreen("scanner");
+      setMsg("");
+    }
 
     function startCamera() {
       navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
@@ -184,53 +316,189 @@
         if (code && code.data.includes("frobster")) {
           try {
             const id = new URL(code.data).searchParams.get("id");
-            if (id) { stopCamera(); startPlayer(id); return; }
+            if (id) { stopCamera(); startWithCard(id); return; }
           } catch(e) {}
         }
       }
       scanLoop = requestAnimationFrame(tick);
     }
 
-    function startPlayer(id) {
-      cardId = id;
-      scannerScreen.style.display = "none";
-      playerScreen.classList.add("active");
-      msgEl.textContent = "";
+    // Login
+    loginBtn.addEventListener("click", () => {
+      FrobsterAuth.startLogin(cardId);
+    });
+    logoutBtn.addEventListener("click", () => {
+      FrobsterAuth.logout();
+      logoutBtn.style.display = "none";
+      goToScanner();
+    });
+    logoutFromNoPremium.addEventListener("click", () => {
+      FrobsterAuth.logout();
+      logoutBtn.style.display = "none";
+      goToScanner();
+    });
 
-      const track = trackData?.find(t => t.id === id);
-      if (!track || !track.track_id) {
-        msgEl.textContent = "Kaart niet gevonden.";
+    // Hoofdflow per kaartje
+    async function startWithCard(id) {
+      cardId = id;
+      currentTrack = trackData?.find(t => t.id === id);
+      if (!currentTrack || !currentTrack.track_id) {
+        setMsg("Kaart niet gevonden.", true);
+        showScreen("scanner");
         return;
       }
-      if (IFrameAPI) loadTrack(track.track_id);
-      else pendingTrackId = track.track_id;
+
+      if (!FrobsterAuth.isLoggedIn()) {
+        showScreen("login");
+        return;
+      }
+
+      // Premium check (eenmalig per sessie geheugen via window cache)
+      if (window.__frobsterPremiumChecked !== true) {
+        showScreen("player");
+        playerStatus.textContent = "Account controlerenâ¦";
+        const premium = await FrobsterPlayer.isPremium();
+        if (!premium) {
+          showScreen("noPremium");
+          return;
+        }
+        window.__frobsterPremiumChecked = true;
+      }
+
+      await tryPlayCurrentTrack();
     }
 
-    function loadTrack(trackId) {
-      pendingTrackId = null;
-      currentTrackId = trackId;
-      const mount = document.getElementById("spotify-mount");
+    async function tryPlayCurrentTrack() {
+      showScreen("player");
+      revealContent.classList.remove("shown");
+      revealBtn.style.display = "";
+      isPaused = false;
+      pauseBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg> Pauze';
+      playerStatus.textContent = "Apparaat zoekenâ¦";
+
+      try {
+        const device = await FrobsterPlayer.pickActiveDevice();
+        if (!device) {
+          showScreen("noDevice");
+          return;
+        }
+        currentDevice = device;
+        deviceName.textContent = device.name;
+        playerStatus.textContent = "Speelt afâ¦";
+        await FrobsterPlayer.playTrack(currentTrack.track_id, device.id, 0);
+      } catch (e) {
+        if (e.status === 401) {
+          // token issue, force re-login
+          FrobsterAuth.logout();
+          showScreen("login");
+          return;
+        }
+        if (e.status === 404 || e.status === 403) {
+          // device niet meer actief
+          showScreen("noDevice");
+          return;
+        }
+        playerStatus.textContent = "Fout bij afspelen";
+        setMsg(e.message, true);
+      }
+    }
+
+    // Pauze toggle
+    pauseBtn.addEventListener("click", async () => {
+      try {
+        if (!isPaused) {
+          await FrobsterPlayer.pause();
+          isPaused = true;
+          pauseBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> Speel';
+          playerStatus.textContent = "Gepauzeerd";
+        } else {
+          await FrobsterPlayer.resume();
+          isPaused = false;
+          pauseBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg> Pauze';
+          playerStatus.textContent = "Speelt afâ¦";
+        }
+      } catch (e) { setMsg(e.message, true); }
+    });
+
+    // Begin
+    restartBtn.addEventListener("click", async () => {
+      if (!currentTrack || !currentDevice) return;
+      try {
+        await FrobsterPlayer.playTrack(currentTrack.track_id, currentDevice.id, 0);
+        isPaused = false;
+        pauseBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg> Pauze';
+        playerStatus.textContent = "Speelt afâ¦";
+      } catch (e) { setMsg(e.message, true); }
+    });
+
+    // Wissel apparaat
+    switchDeviceBtn.addEventListener("click", async () => {
+      try {
+        const devices = await FrobsterPlayer.getDevices();
+        if (devices.length === 0) { showScreen("noDevice"); return; }
+        const labels = devices.map((d, i) => `${i + 1}. ${d.name}${d.is_active ? " (actief)" : ""}`).join("\n");
+        const pick = prompt(`Kies apparaat:\n\n${labels}\n\nVoer nummer in:`);
+        const idx = parseInt(pick, 10) - 1;
+        if (isNaN(idx) || idx < 0 || idx >= devices.length) return;
+        currentDevice = devices[idx];
+        deviceName.textContent = currentDevice.name;
+        await FrobsterPlayer.playTrack(currentTrack.track_id, currentDevice.id, 0);
+      } catch (e) { setMsg(e.message, true); }
+    });
+
+    retryDeviceBtn.addEventListener("click", () => {
+      tryPlayCurrentTrack();
+    });
+
+    // Onthul antwoord
+    revealBtn.addEventListener("click", () => {
+      if (!currentTrack) return;
+      revealSong.textContent = currentTrack.song;
+      revealArtist.textContent = currentTrack.artist;
+      revealYear.textContent = currentTrack.year;
+      revealContent.classList.add("shown");
+      revealBtn.style.display = "none";
+    });
+
+    // ---------------- Iframe fallback (non-Premium) ----------------
+    let iframeApiReady = false;
+    let pendingIframeTrack = null;
+    let iframeController = null;
+
+    window.onSpotifyIframeApiReady = (api) => {
+      iframeApiReady = true;
+      window.__SpotifyIframeAPI = api;
+      if (pendingIframeTrack) loadIframeTrack(pendingIframeTrack);
+    };
+
+    function loadIframeTrack(trackId) {
+      pendingIframeTrack = null;
+      const mount = document.getElementById("iframe-mount");
       mount.innerHTML = "<div></div>";
-      IFrameAPI.createController(
+      window.__SpotifyIframeAPI.createController(
         mount.firstElementChild,
         { uri: `spotify:track:${trackId}` },
-        (ctrl) => {
-          controller = ctrl;
-          ctrl.addListener("ready", () => {
-            try { ctrl.seek(0); } catch(e){}
-            setTimeout(() => { try { ctrl.seek(0); } catch(e){} }, 500);
-            if (autoPlayOnReady) {
-              autoPlayOnReady = false;
-              // Spotify-iframe kan kort na ready nog niet klaar zijn â meerdere pogingen
-              const tryPlay = () => { try { ctrl.seek(0); ctrl.play(); } catch(e){} };
-              setTimeout(tryPlay, 100);
-              setTimeout(tryPlay, 400);
-              setTimeout(tryPlay, 900);
-            }
-          });
-        }
+        (ctrl) => { iframeController = ctrl; }
       );
     }
+
+    continuePreviewBtn.addEventListener("click", () => {
+      // Laad iframe API nu pas
+      if (!document.getElementById("spotify-iframe-script")) {
+        const s = document.createElement("script");
+        s.id = "spotify-iframe-script";
+        s.src = "https://open.spotify.com/embed/iframe-api/v1";
+        s.async = true;
+        document.body.appendChild(s);
+      }
+      showScreen("iframe");
+      revealBtn.style.display = "";
+      revealContent.classList.remove("shown");
+      if (currentTrack) {
+        if (iframeApiReady) loadIframeTrack(currentTrack.track_id);
+        else pendingIframeTrack = currentTrack.track_id;
+      }
+    });
   </script>
 </body>
 </html>
