@@ -4,27 +4,31 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Frobster</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Monoton&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       background: #0a0a1a; color: #fff;
-      background-image:
-        radial-gradient(circle at 8% 12%, rgba(255,94,152,0.18) 0%, transparent 18%),
-        radial-gradient(circle at 92% 18%, rgba(255,213,79,0.14) 0%, transparent 16%),
-        radial-gradient(circle at 12% 78%, rgba(156,100,255,0.16) 0%, transparent 18%),
-        radial-gradient(circle at 88% 82%, rgba(77,208,225,0.16) 0%, transparent 18%),
-        radial-gradient(circle at 50% 50%, rgba(255,154,90,0.10) 0%, transparent 22%);
-      background-attachment: fixed;
       font-family: -apple-system, sans-serif;
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
       min-height: 100vh; user-select: none;
       -webkit-tap-highlight-color: transparent;
       padding: 1rem;
+      position: relative;
+    }
+    #bg-art {
+      position: fixed; inset: 0;
+      width: 100%; height: 100%;
+      z-index: -1; pointer-events: none;
+      opacity: 0.55;
     }
     h1 {
-      font-size: 2.8rem; letter-spacing: 0.22em; margin-bottom: 2rem;
-      color: #4dd0e1; font-weight: 800;
+      font-family: 'Monoton', cursive;
+      font-size: 3rem; letter-spacing: 0.08em; margin-bottom: 2rem;
+      color: #4dd0e1; font-weight: 400;
       text-shadow:
         0 0 6px #4dd0e1,
         0 0 14px #4dd0e1,
@@ -35,7 +39,7 @@
     .screen { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 360px; }
     .screen.active { display: flex; }
 
-    /* Scanner â vinyl-look */
+    /* Scanner — vinyl-look */
     #scan-btn {
       width: 160px; height: 160px; border-radius: 50%;
       background:
@@ -66,7 +70,7 @@
     #canvas { display: none; }
     #scan-hint { margin-top: 1rem; font-size: 0.9rem; color: #aaa; }
 
-    /* Player â vinyl mystery card */
+    /* Player — vinyl mystery card */
     #mystery {
       width: 100%; padding: 1.8rem 1.5rem;
       border-radius: 16px;
@@ -78,21 +82,39 @@
       text-align: center;
       box-shadow: 0 0 40px rgba(77,208,225,0.15);
     }
-    #mystery .secret {
-      font-size: 1.8rem; letter-spacing: 0.35em;
-      color: #4dd0e1; font-weight: 800;
-      text-shadow: 0 0 10px rgba(77,208,225,0.7);
+    #mystery .equalizer {
+      display: flex; align-items: flex-end; justify-content: center;
+      gap: 6px; height: 56px; padding: 4px 0;
     }
-    #mystery .status { margin-top: 0.5rem; font-size: 0.85rem; color: #aaa; }
+    #mystery .equalizer span {
+      display: block; width: 8px; border-radius: 4px;
+      background: #4dd0e1;
+      box-shadow: 0 0 8px rgba(77,208,225,0.8), 0 0 16px rgba(77,208,225,0.4);
+      animation: eqbar 0.9s ease-in-out infinite alternate;
+      transform-origin: bottom;
+    }
+    #mystery .equalizer span:nth-child(1) { animation-duration: 0.85s; animation-delay: 0.1s; }
+    #mystery .equalizer span:nth-child(2) { animation-duration: 1.15s; animation-delay: 0.2s; }
+    #mystery .equalizer span:nth-child(3) { animation-duration: 0.65s; animation-delay: 0s; }
+    #mystery .equalizer span:nth-child(4) { animation-duration: 1.0s; animation-delay: 0.3s; }
+    #mystery .equalizer span:nth-child(5) { animation-duration: 0.75s; animation-delay: 0.15s; }
+    #mystery .equalizer span:nth-child(6) { animation-duration: 1.25s; animation-delay: 0.05s; }
+    #mystery .equalizer span:nth-child(7) { animation-duration: 0.95s; animation-delay: 0.22s; }
+    #mystery .equalizer.paused span { animation-play-state: paused; opacity: 0.5; }
+    @keyframes eqbar {
+      0%   { height: 14%; }
+      100% { height: 100%; }
+    }
+    #mystery .status { margin-top: 0.6rem; font-size: 0.85rem; color: #aaa; }
 
-    .controls { display: flex; gap: 0.8rem; margin-top: 1.5rem; }
+    .controls { display: flex; gap: 0.8rem; margin-top: 1.5rem; justify-content: center; }
     .btn {
       background: #ff5e98; border: none; color: #fff;
       padding: 0.9rem 1.4rem; border-radius: 999px;
       cursor: pointer; font-size: 0.95rem; font-weight: 600;
       box-shadow: 0 0 20px rgba(255,94,152,0.45);
       touch-action: manipulation;
-      display: flex; align-items: center; gap: 0.4rem;
+      display: inline-flex; align-items: center; gap: 0.4rem;
     }
     .btn:active { transform: scale(0.96); }
     .btn svg { width: 18px; height: 18px; fill: #fff; }
@@ -147,6 +169,67 @@
   </style>
 </head>
 <body>
+  <svg id="bg-art" aria-hidden="true" preserveAspectRatio="xMidYMid slice" viewBox="0 0 400 800">
+    <g transform="translate(40,110)">
+      <circle r="68" fill="#ff5e98"/>
+      <circle r="54" fill="none" stroke="rgba(255,255,255,0.28)" stroke-width="0.8"/>
+      <circle r="42" fill="none" stroke="rgba(255,255,255,0.28)" stroke-width="0.8"/>
+      <circle r="30" fill="none" stroke="rgba(255,255,255,0.28)" stroke-width="0.8"/>
+      <circle r="14" fill="#ffe1ec"/>
+      <circle r="2.5" fill="#1a1a2e"/>
+    </g>
+    <g transform="translate(355,80)">
+      <circle r="56" fill="#ffd54f"/>
+      <ellipse rx="52" ry="14" transform="rotate(15)" fill="none" stroke="rgba(0,0,0,0.22)" stroke-width="1.6"/>
+      <ellipse rx="52" ry="14" transform="rotate(-25)" fill="none" stroke="rgba(0,0,0,0.22)" stroke-width="1.6"/>
+      <ellipse rx="52" ry="14" transform="rotate(55)" fill="none" stroke="rgba(0,0,0,0.22)" stroke-width="1.6"/>
+      <ellipse rx="52" ry="14" transform="rotate(-60)" fill="none" stroke="rgba(0,0,0,0.22)" stroke-width="1.6"/>
+    </g>
+    <g transform="translate(210,30)">
+      <circle r="34" fill="#9c64ff"/>
+      <circle r="26" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.7"/>
+      <circle r="18" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.7"/>
+      <circle r="8" fill="#fff"/>
+      <circle r="2" fill="#1a1a2e"/>
+    </g>
+    <g transform="translate(395,340)">
+      <circle r="72" fill="#4dd0e1"/>
+      <circle r="58" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.8"/>
+      <circle r="44" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.8"/>
+      <circle r="30" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.8"/>
+      <circle r="14" fill="#fff"/>
+      <circle r="3" fill="#1a1a2e"/>
+    </g>
+    <g transform="translate(15,400)">
+      <circle r="50" fill="#9c64ff"/>
+      <ellipse rx="46" ry="13" transform="rotate(20)" fill="none" stroke="rgba(0,0,0,0.22)" stroke-width="1.5"/>
+      <ellipse rx="46" ry="13" transform="rotate(-30)" fill="none" stroke="rgba(0,0,0,0.22)" stroke-width="1.5"/>
+      <ellipse rx="46" ry="13" transform="rotate(70)" fill="none" stroke="rgba(0,0,0,0.22)" stroke-width="1.5"/>
+    </g>
+    <g transform="translate(370,580)">
+      <circle r="44" fill="#ff5e98"/>
+      <ellipse rx="40" ry="11" transform="rotate(25)" fill="none" stroke="rgba(0,0,0,0.22)" stroke-width="1.4"/>
+      <ellipse rx="40" ry="11" transform="rotate(-35)" fill="none" stroke="rgba(0,0,0,0.22)" stroke-width="1.4"/>
+      <ellipse rx="40" ry="11" transform="rotate(80)" fill="none" stroke="rgba(0,0,0,0.22)" stroke-width="1.4"/>
+    </g>
+    <g transform="translate(60,720)">
+      <circle r="62" fill="#ff9a5a"/>
+      <circle r="50" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.8"/>
+      <circle r="38" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.8"/>
+      <circle r="26" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.8"/>
+      <circle r="12" fill="#fff"/>
+      <circle r="3" fill="#1a1a2e"/>
+    </g>
+    <g transform="translate(370,755)">
+      <circle r="60" fill="#4caf50"/>
+      <circle r="48" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.8"/>
+      <circle r="36" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.8"/>
+      <circle r="24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.8"/>
+      <circle r="12" fill="#fff"/>
+      <circle r="3" fill="#1a1a2e"/>
+    </g>
+  </svg>
+
   <div class="topbar">
     <button id="logout-btn" style="display:none">uitloggen</button>
   </div>
@@ -159,7 +242,7 @@
       <svg viewBox="0 0 24 24"><path d="M9.5 6.5v3h-3v-3h3M11 5H5v6h6V5zm-1.5 9.5v3h-3v-3h3M11 13H5v6h6v-6zm6.5-6.5v3h-3v-3h3M19 5h-6v6h6V5zm-6 8h1.5v1.5H13V13zm1.5 1.5H16V16h-1.5v-1.5zM16 13h1.5v1.5H16V13zm-3 3h1.5v1.5H13V16zm1.5 1.5H16V19h-1.5v-1.5zM16 16h1.5v1.5H16V16zm1.5-1.5H19V16h-1.5v-1.5zm0 3H19V19h-1.5v-1.5zM22 7h-2V4h-3V2h5v5zm0 15v-5h-2v3h-3v2h5zM2 22h5v-2H4v-3H2v5zM2 2v5h2V4h3V2H2z"/></svg>
     </button>
     <p id="scan-label">Scan een kaartje</p>
-    <button class="btn cyan" id="opening-btn" style="margin-top:1.8rem">ð Speel openingsnummer</button>
+    <button class="btn cyan" id="opening-btn" style="margin-top:1.8rem">💒 Speel openingsnummer</button>
     <div id="camera-wrap">
       <video id="video" playsinline autoplay muted></video>
       <canvas id="canvas"></canvas>
@@ -198,8 +281,10 @@
   <!-- Player -->
   <div id="player-screen" class="screen">
     <div id="mystery">
-      <div class="secret">? ? ? ? ?</div>
-      <div class="status" id="player-status">Bezig met ladenâ¦</div>
+      <div class="equalizer" id="equalizer">
+        <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+      </div>
+      <div class="status" id="player-status">Bezig met laden...</div>
     </div>
     <div class="controls">
       <button class="btn" id="pause-btn" aria-label="Pauze">
@@ -212,9 +297,11 @@
       </button>
     </div>
     <div id="device-info">
-      Speelt op: <span class="name" id="device-name">â¦</span>
+      Speelt op: <span class="name" id="device-name">...</span>
       <button class="btn secondary" id="switch-device-btn" style="margin-top:0.6rem; font-size:0.8rem; padding:0.3rem 0.9rem">Wissel apparaat</button>
     </div>
+
+    <button class="btn cyan" id="new-scan-btn" style="margin-top:1.8rem">Nieuw kaartje scannen</button>
 
     <div id="reveal">
       <button class="btn" id="reveal-btn">Onthul antwoord</button>
@@ -224,8 +311,6 @@
         <div class="year" id="reveal-year"></div>
       </div>
     </div>
-
-    <button class="btn secondary" id="new-scan-btn" style="margin-top:1.5rem">Nieuw kaartje scannen</button>
   </div>
 
   <!-- Iframe fallback voor non-Premium -->
@@ -298,6 +383,7 @@
     const continuePreviewBtn = document.getElementById("continue-preview-btn");
     const logoutFromNoPremium = document.getElementById("logout-from-no-premium");
     const openingBtn = document.getElementById("opening-btn");
+    const equalizer = document.getElementById("equalizer");
 
     function showScreen(name) {
       Object.values(screens).forEach(s => s.classList.remove("active"));
@@ -328,7 +414,7 @@
     iframeNewScanBtn.addEventListener("click", goToScanner);
 
     function goToScanner() {
-      // Laat Spotify gewoon doorspelen â pauzeren zou het device als inactief markeren
+      // Laat Spotify gewoon doorspelen — pauzeren zou het device als inactief markeren
       // Iframe opruimen (dit is fallback-pad, geen invloed op Connect-playback)
       const mount = document.getElementById("iframe-mount");
       if (mount) mount.innerHTML = "";
@@ -406,7 +492,7 @@
       // Premium check (eenmalig per sessie geheugen via window cache)
       if (window.__frobsterPremiumChecked !== true) {
         showScreen("player");
-        playerStatus.textContent = "Account controlerenâ¦";
+        playerStatus.textContent = "Account controleren...";
         const premium = await FrobsterPlayer.isPremium();
         if (!premium) {
           showScreen("noPremium");
@@ -432,8 +518,9 @@
         revealBtn.style.display = "";
       }
       isPaused = false;
+      equalizer.classList.remove("paused");
       pauseBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg> Pauze';
-      playerStatus.textContent = "Apparaat zoekenâ¦";
+      playerStatus.textContent = "Apparaat zoeken...";
 
       try {
         const device = await FrobsterPlayer.pickActiveDevice();
@@ -443,7 +530,7 @@
         }
         currentDevice = device;
         deviceName.textContent = device.name;
-        playerStatus.textContent = "Speelt afâ¦";
+        playerStatus.textContent = "Speelt af...";
         await FrobsterPlayer.playTrack(currentTrack.track_id, device.id, 0);
       } catch (e) {
         if (e.status === 401) {
@@ -468,13 +555,15 @@
         if (!isPaused) {
           await FrobsterPlayer.pause();
           isPaused = true;
+          equalizer.classList.add("paused");
           pauseBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> Speel';
           playerStatus.textContent = "Gepauzeerd";
         } else {
           await FrobsterPlayer.resume();
           isPaused = false;
+          equalizer.classList.remove("paused");
           pauseBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg> Pauze';
-          playerStatus.textContent = "Speelt afâ¦";
+          playerStatus.textContent = "Speelt af...";
         }
       } catch (e) { setMsg(e.message, true); }
     });
@@ -485,8 +574,9 @@
       try {
         await FrobsterPlayer.playTrack(currentTrack.track_id, currentDevice.id, 0);
         isPaused = false;
+        equalizer.classList.remove("paused");
         pauseBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg> Pauze';
-        playerStatus.textContent = "Speelt afâ¦";
+        playerStatus.textContent = "Speelt af...";
       } catch (e) { setMsg(e.message, true); }
     });
 
